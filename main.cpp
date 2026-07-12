@@ -35,17 +35,19 @@ void cleanup(modbus_t *&ctx) {
   modbus_free(ctx);
 }
 
+// read witmotion sensor data by id
 SensorData read_device(modbus_t *ctx, int id) {
   uint16_t tab_reg[2];
   SensorData data{0, 0};
-
   modbus_set_slave(ctx, id);
+
+  // x & y rotation is stored register 61 & 62
   int rc = modbus_read_registers(ctx, 61, 2, tab_reg);
+
   if (rc == -1) {
     fprintf(stderr, "%s\n", modbus_strerror(errno));
   }
-  std::cout << "::" << rc;
-  // Extract raw values
+
   int16_t roll_raw = static_cast<int16_t>(tab_reg[0]);
   int16_t pitch_raw = static_cast<int16_t>(tab_reg[1]);
 
