@@ -1,9 +1,11 @@
+#include <cerrno>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <iostream>
 #include <modbus/modbus-rtu.h>
 #include <modbus/modbus.h>
+#include <ostream>
 #include <thread>
 
 struct boom_joint {
@@ -35,11 +37,34 @@ void cleanup(modbus_t *&ctx) {
   modbus_free(ctx);
 }
 
+int update_device_id(modbus_t *ctx, int newId) {
+  int unlock = modbus_write_register(ctx, 0x69, 0xB588);
+  if (unlock == -1) {
+    std::cout << "unlock failed:" << 0x69 << ":" << 0xB588 << std::endl;
+    std::cerr << "Error: " << errno << std::endl;
+    return -1;
+  }
+
+  int update = modbus_write_register(ctx, 0x1A, newId);
+  if (update == -1) {
+    std::cout << "update failed";
+    return -1;
+  }
+
+  modbus_set_slave(ctx, newId);
+  int save = modbus_write_register(ctx, 0x0000, 0x0000);
+  if (save == -1) {
+    std::cout << "save failed" << std::endl;
+    std::cerr << "Error: " << errno << std::endl;
+    return -1;
+  }
+  return 0;
+}
+
 // read witmotion sensor data by id
-SensorData read_device(modbus_t *ctx, int id) {
+SensorData read_device(modbus_t *ctx) {
   uint16_t tab_reg[2];
   SensorData data{0, 0};
-  modbus_set_slave(ctx, id);
 
   // x & y rotation is stored register 61 & 62
   int rc = modbus_read_registers(ctx, 61, 2, tab_reg);
@@ -70,23 +95,21 @@ int main() {
   modbus_t *ctx = nullptr;
   open_connection(ctx);
 
-  int counter = 0;
-  while (counter < 100) {
+  boom_joint a{0x01, 1000};
+  modbus_set_slave(ctx, a.sensor_id);
+
+  while (true) {
     clearScreenANSI();
 
-    boom_joint a{80, 1000};
-
-    SensorData reading = read_device(ctx, a.sensor_id);
+    SensorData reading = read_device(ctx);
     double y = get_y_of(reading.x, a.dist);
 
     std::cout << "boom y:" << y << "\n";
 
-    std::cout << "Count: " << counter << "\n";
-    std::cout << "Roll: " << reading.x << "°, Pitch: " << reading.y << "°"
+    std::cout << "Roll: " << reading.x << "°, Pitch: " << reading.y
               << std::endl;
 
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
-    counter++;
   }
   cleanup(ctx);
   return 0;
