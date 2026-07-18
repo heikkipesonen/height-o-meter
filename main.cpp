@@ -8,9 +8,36 @@
 #include <ostream>
 #include <thread>
 
-struct boom_joint {
+double toRadians(double deg) { return deg * (3.14159265358979323846 / 180); }
+
+double get_y_of(double angle, int dist) {
+  return std::sin(toRadians(angle)) * dist;
+}
+double get_x_of(double angle, int dist) {
+  return std::cos(toRadians(angle)) * dist;
+}
+
+class Section {
+public:
   int sensor_id;
   int dist;
+  int base_offset_x;
+  int base_offset_y;
+  double value_x;
+  double value_y;
+  bool inverted;
+
+  int get_x() {
+    int multiplier = this->inverted ? -1 : 1;
+    int pos_x = (get_x_of(this->value_x, this->dist) + this->base_offset_x) *
+                multiplier;
+    return pos_x;
+  }
+
+  int get_y() {
+    int pos_y = get_y_of(this->value_x, this->dist) + this->base_offset_y;
+    return pos_y;
+  }
 };
 
 struct SensorData {
@@ -38,31 +65,32 @@ void cleanup(modbus_t *&ctx) {
 }
 
 int update_device_id(modbus_t *ctx, int newId) {
+  // first write code to unlock register to enable writing
   int unlock = modbus_write_register(ctx, 0x69, 0xB588);
   if (unlock == -1) {
-    std::cout << "unlock failed:" << 0x69 << ":" << 0xB588 << std::endl;
-    std::cerr << "Error: " << errno << std::endl;
+    fprintf(stderr, "%s\n", modbus_strerror(errno));
     return -1;
   }
 
+  // 0x1A slave_id register for witmotion sinat-485
   int update = modbus_write_register(ctx, 0x1A, newId);
   if (update == -1) {
-    std::cout << "update failed";
+    fprintf(stderr, "%s\n", modbus_strerror(errno));
     return -1;
   }
 
+  // id of device updated already, dunno if this is even needed
   modbus_set_slave(ctx, newId);
   int save = modbus_write_register(ctx, 0x0000, 0x0000);
   if (save == -1) {
-    std::cout << "save failed" << std::endl;
-    std::cerr << "Error: " << errno << std::endl;
+    fprintf(stderr, "%s\n", modbus_strerror(errno));
     return -1;
   }
+
   return 0;
 }
 
-// read witmotion sensor data by id
-SensorData read_device(modbus_t *ctx) {
+SensorData readAngle(modbus_t *ctx) {
   uint16_t tab_reg[2];
   SensorData data{0, 0};
 
@@ -82,35 +110,43 @@ SensorData read_device(modbus_t *ctx) {
   return data;
 }
 
-double toRadians(double deg) { return deg * (3.14159265358979323846 / 180); }
-
-double get_y_of(double angle, int dist) {
-  return std::sin(toRadians(angle)) * dist;
+void log_joint_data(Section *x) {
+  int multiplier = x->inverted == true ? -1 : 1;
+  std::cout << "Roll: " << x->value_x << "°, Pitch: " << x->value_y
+            << ", y: " << get_y_of(x->value_x, x->dist)
+            << ", x: " << get_x_of(x->value_x, x->dist) * multiplier
+            << std::endl;
 }
-double get_x_of(double angle, int dist) {
-  return std::cos(toRadians(angle)) * dist;
+
+void update_joint(modbus_t *ctx, Section *x) {
+  modbus_set_slave(ctx, x->sensor_id);
+  std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  SensorData r_a = readAngle(ctx);
+  x->value_x = r_a.x;
+  x->value_y = r_a.y;
 }
 
 int main() {
   modbus_t *ctx = nullptr;
   open_connection(ctx);
 
-  boom_joint a{0x01, 1000};
-  modbus_set_slave(ctx, a.sensor_id);
+  Section a{0x50, 353, 0, 30, 0, 0, true};
+  Section b{0x01, 353, 30, 40, 0, 0, false};
 
   while (true) {
     clearScreenANSI();
 
-    SensorData reading = read_device(ctx);
-    double y = get_y_of(reading.x, a.dist);
+    update_joint(ctx, &a);
+    update_joint(ctx, &b);
 
-    std::cout << "boom y:" << y << "\n";
+    int total_x = a.get_x() + b.get_x();
+    int total_y = a.get_y() + b.get_y();
 
-    std::cout << "Roll: " << reading.x << "°, Pitch: " << reading.y
-              << std::endl;
+    std::cout << "X: " << total_x << " Y: " << total_y << std::endl;
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  };
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(200));
-  }
   cleanup(ctx);
   return 0;
 }
