@@ -17,34 +17,6 @@ double get_x_of(double angle, int dist) {
   return std::cos(toRadians(angle)) * dist;
 }
 
-class Section {
-public:
-  int sensor_id;
-  int dist;
-  int base_offset_x;
-  int base_offset_y;
-  double value_x;
-  double value_y;
-  bool inverted;
-
-  int get_x() {
-    int multiplier = this->inverted ? -1 : 1;
-    int pos_x = (get_x_of(this->value_x, this->dist) + this->base_offset_x) *
-                multiplier;
-    return pos_x;
-  }
-
-  int get_y() {
-    int pos_y = get_y_of(this->value_x, this->dist) + this->base_offset_y;
-    return pos_y;
-  }
-};
-
-struct SensorData {
-  double x;
-  double y;
-};
-
 void clearScreenANSI() {
   std::cout << "\033[2J\033[1;1H"; // Clear screen and move cursor to top-left
 }
@@ -81,6 +53,7 @@ int update_device_id(modbus_t *ctx, int newId) {
 
   // id of device updated already, dunno if this is even needed
   modbus_set_slave(ctx, newId);
+
   int save = modbus_write_register(ctx, 0x0000, 0x0000);
   if (save == -1) {
     fprintf(stderr, "%s\n", modbus_strerror(errno));
@@ -89,6 +62,11 @@ int update_device_id(modbus_t *ctx, int newId) {
 
   return 0;
 }
+
+struct SensorData {
+  double x;
+  double y;
+};
 
 SensorData readAngle(modbus_t *ctx) {
   uint16_t tab_reg[2];
@@ -110,15 +88,34 @@ SensorData readAngle(modbus_t *ctx) {
   return data;
 }
 
-void log_joint_data(Section *x) {
-  int multiplier = x->inverted == true ? -1 : 1;
-  std::cout << "Roll: " << x->value_x << "°, Pitch: " << x->value_y
-            << ", y: " << get_y_of(x->value_x, x->dist)
-            << ", x: " << get_x_of(x->value_x, x->dist) * multiplier
-            << std::endl;
+struct Section {
+  int sensor_id;
+  int dist = 0;
+  int base_offset_x = 0;
+  int base_offset_y = 0;
+  double value_x = 0;
+  double value_y = 0;
+  bool inv_x = false;
+  bool inv_y = false;
+};
+
+double get_section_x(Section *section) {
+  int multiplier = section->inv_x ? -1 : 1;
+  double pos_x =
+      (get_x_of(section->value_x, section->dist) + section->base_offset_x) *
+      multiplier;
+  return pos_x;
 }
 
-void update_joint(modbus_t *ctx, Section *x) {
+double get_section_y(Section *section) {
+  int multiplier = section->inv_y ? -1 : 1;
+  double pos_y =
+      (get_y_of(section->value_x, section->dist) + section->base_offset_y) *
+      multiplier;
+  return pos_y;
+}
+
+void update_section(modbus_t *ctx, Section *x) {
   modbus_set_slave(ctx, x->sensor_id);
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
@@ -126,6 +123,14 @@ void update_joint(modbus_t *ctx, Section *x) {
   x->value_x = r_a.x;
   x->value_y = r_a.y;
 }
+
+struct Excavator {
+  Section superstructure;
+  Section boom_a;
+  Section boom_b;
+  Section boom_c;
+  Section coupler;
+};
 
 int main() {
   modbus_t *ctx = nullptr;
@@ -137,11 +142,11 @@ int main() {
   while (true) {
     clearScreenANSI();
 
-    update_joint(ctx, &a);
-    update_joint(ctx, &b);
+    update_section(ctx, &a);
+    update_section(ctx, &b);
 
-    int total_x = a.get_x() + b.get_x();
-    int total_y = a.get_y() + b.get_y();
+    int total_x = get_section_x(&a) + get_section_x(&b);
+    int total_y = get_section_y(&a) + get_section_y(&b);
 
     std::cout << "X: " << total_x << " Y: " << total_y << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
