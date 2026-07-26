@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"/home/possu/height-o-matic/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
