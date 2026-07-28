@@ -9,6 +9,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(MODBUS_INCLUDE_DIR ~/libmodbus/src)
 set(MODBUS_LIBRARY ~/libmodbus/src/.libs/libmodbus.so)
 add_executable(heightmatic main.cpp utils.cpp device-handler.cpp)   
+include_directories(${CMAKE_SOURCE_DIR}/include)
 
 find_package(Notcurses REQUIRED)
 target_link_libraries(heightmatic PRIVATE ${MODBUS_LIBRARY} notcurses)
