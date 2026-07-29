@@ -70,7 +70,7 @@ bool read_sensor(modbus_t *ctx, Sensor *sensor) {
     if (sensor->id == 0) return false;
     
     modbus_set_slave(ctx, sensor->id);
-    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     
     SensorData data = read_angle(ctx);
     if (data.valid) {
@@ -85,32 +85,29 @@ bool read_sensor(modbus_t *ctx, Sensor *sensor) {
 
 void update_section(modbus_t *ctx, Section *s) {
     modbus_set_slave(ctx, s->sensor_id);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     SensorData data = read_angle(ctx);
     s->value_x = data.x;
     s->value_y = data.y;
 }
 
 int update_device_id(modbus_t *ctx, int newId) {
-    // Unlock register to enable writing
     int unlock = modbus_write_register(ctx, 0x69, 0xB588);
     if (unlock == -1) {
         fprintf(stderr, "Unlock failed: %s\n", modbus_strerror(errno));
         return -1;
     }
 
-    // 0x1A is slave_id register for Witmotion SINDT-485
     int update = modbus_write_register(ctx, 0x1A, newId);
     if (update == -1) {
         fprintf(stderr, "Write ID failed: %s\n", modbus_strerror(errno));
         return -1;
     }
 
-    // Set slave to new ID for save command
     modbus_set_slave(ctx, newId);
-
-    // Save to flash
-    int save = modbus_write_register(ctx, 0x0000, 0x0000);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    
+    int save = modbus_write_register(ctx, 0x00, 0x00);
     if (save == -1) {
         fprintf(stderr, "Save failed: %s\n", modbus_strerror(errno));
         return -1;
@@ -133,12 +130,56 @@ double get_section_y(Section *section) {
 
 void excavator_thread(ExcavatorState *state, Section *a, Section *b) {
     modbus_t *ctx = nullptr;
+    int consecutive_failures = 0;
+    
     open_connection(ctx);
 
     while (state->running) {
-        // Read all 5 sensors
+        // Paused for ID change - close connection and wait
+        if (state->paused) {
+            if (ctx != nullptr) {
+                cleanup(ctx);
+                ctx = nullptr;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            continue;
+        }
+        
+        // Manual reconnect requested
+        if (state->reconnect) {
+            cleanup(ctx);
+            ctx = nullptr;
+            state->reconnect = false;
+        }
+        
+        // Reconnect if connection lost
+        if (ctx == nullptr) {
+            open_connection(ctx);
+            if (ctx == nullptr) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                continue;
+            }
+            consecutive_failures = 0;
+        }
+        
+        // Read all sensors
+        int failures = 0;
         for (int i = 0; i < NUM_SENSORS; i++) {
-            read_sensor(ctx, &state->sensors[i]);
+            if (!read_sensor(ctx, &state->sensors[i])) {
+                failures++;
+            }
+        }
+        
+        // If all reads fail repeatedly, reconnect
+        if (failures == NUM_SENSORS) {
+            consecutive_failures++;
+            if (consecutive_failures > 10) {
+                cleanup(ctx);
+                ctx = nullptr;
+                consecutive_failures = 0;
+            }
+        } else {
+            consecutive_failures = 0;
         }
         
         // Legacy: also update old Section structs for backward compat
@@ -156,19 +197,60 @@ void excavator_thread(ExcavatorState *state, Section *a, Section *b) {
     cleanup(ctx);
 }
 
-int update_sensor_id(int current_id, int new_id) {
+bool probe_sensor(ExcavatorState *state, int id, double *roll, double *pitch) {
+    // Pause the polling thread and wait for it to release the port
+    state->paused = true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    
+    modbus_t *ctx = nullptr;
+    open_connection(ctx);
+    
+    if (ctx == nullptr) {
+        state->paused = false;
+        return false;
+    }
+
+    modbus_set_slave(ctx, id);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    modbus_set_response_timeout(ctx, 0, 200000); // 200ms timeout
+    
+    SensorData data = read_angle(ctx);
+    
+    cleanup(ctx);
+    
+    // Resume polling
+    state->paused = false;
+    
+    if (data.valid) {
+        *roll = data.x;
+        *pitch = data.y;
+        return true;
+    }
+    return false;
+}
+
+int update_sensor_id(ExcavatorState *state, int current_id, int new_id) {
+    // Pause the polling thread and wait for it to release the port
+    state->paused = true;
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    
     modbus_t *ctx = nullptr;
     open_connection(ctx);
     
     if (ctx == nullptr) {
         fprintf(stderr, "Failed to open connection\n");
+        state->paused = false;
         return -1;
     }
 
     modbus_set_slave(ctx, current_id);
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
     
     int result = update_device_id(ctx, new_id);
     
     cleanup(ctx);
+    
+    // Resume polling
+    state->paused = false;
     return result;
 }

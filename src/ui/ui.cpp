@@ -31,14 +31,20 @@ Button configBtn{{50, 400, 120, 60}, "Config"};
 Button calibrateBtn{{180, 400, 120, 60}, "Calibrate"};
 Button sensorSetupBtn{{310, 400, 120, 60}, "Setup"};
 Button sensorRawBtn{{440, 400, 120, 60}, "Raw"};
+Button reloadBtn{{570, 400, 120, 60}, "Reload"};
 Button backBtn{{50, 400, 150, 60}, "Back"};
 Button zeroBtn{{SCREEN_WIDTH/2 - 75, 400, 150, 60}, "Zero"};
 
 // Sensor setup buttons
-Button currentIdMinus{{200, 100, 60, 60}, "-"};
-Button currentIdPlus{{380, 100, 60, 60}, "+"};
-Button newIdMinus{{200, 200, 60, 60}, "-"};
-Button newIdPlus{{380, 200, 60, 60}, "+"};
+Button currentIdMinus{{150, 100, 60, 60}, "-"};
+Button currentIdMinus10{{220, 100, 60, 60}, "-10"};
+Button currentIdPlus10{{420, 100, 60, 60}, "+10"};
+Button currentIdPlus{{490, 100, 60, 60}, "+"};
+Button readBtn{{560, 100, 100, 60}, "Read"};
+Button newIdMinus{{150, 200, 60, 60}, "-"};
+Button newIdMinus10{{220, 200, 60, 60}, "-10"};
+Button newIdPlus10{{420, 200, 60, 60}, "+10"};
+Button newIdPlus{{490, 200, 60, 60}, "+"};
 Button assignBtn{{SCREEN_WIDTH/2 - 100, 320, 200, 60}, "Assign ID"};
 
 } // anonymous namespace
@@ -103,6 +109,8 @@ void UI::handleInput(ExcavatorState *state) {
                         currentScreen = Screen::SENSOR_SETUP;
                     } else if (sensorRawBtn.contains(tx, ty)) {
                         currentScreen = Screen::SENSOR_RAW;
+                    } else if (reloadBtn.contains(tx, ty)) {
+                        state->reconnect = true;
                     }
                     break;
                 case Screen::CONFIG:
@@ -122,14 +130,31 @@ void UI::handleInput(ExcavatorState *state) {
                         currentScreen = Screen::MAIN;
                     } else if (currentIdMinus.contains(tx, ty)) {
                         if (setupCurrentId > 1) setupCurrentId--;
+                    } else if (currentIdMinus10.contains(tx, ty)) {
+                        setupCurrentId = (setupCurrentId > 10) ? setupCurrentId - 10 : 1;
                     } else if (currentIdPlus.contains(tx, ty)) {
                         if (setupCurrentId < 247) setupCurrentId++;
+                    } else if (currentIdPlus10.contains(tx, ty)) {
+                        setupCurrentId = (setupCurrentId < 237) ? setupCurrentId + 10 : 247;
+                    } else if (readBtn.contains(tx, ty)) {
+                        double roll, pitch;
+                        if (probe_sensor(state, setupCurrentId, &roll, &pitch)) {
+                            setupSensorRoll = roll;
+                            setupSensorPitch = pitch;
+                            setupSensorConnected = true;
+                        } else {
+                            setupSensorConnected = false;
+                        }
                     } else if (newIdMinus.contains(tx, ty)) {
                         if (setupNewId > 1) setupNewId--;
+                    } else if (newIdMinus10.contains(tx, ty)) {
+                        setupNewId = (setupNewId > 10) ? setupNewId - 10 : 1;
                     } else if (newIdPlus.contains(tx, ty)) {
                         if (setupNewId < 247) setupNewId++;
+                    } else if (newIdPlus10.contains(tx, ty)) {
+                        setupNewId = (setupNewId < 237) ? setupNewId + 10 : 247;
                     } else if (assignBtn.contains(tx, ty)) {
-                        int result = update_sensor_id(setupCurrentId, setupNewId);
+                        int result = update_sensor_id(state, setupCurrentId, setupNewId);
                         if (result == 0) {
                             setupStatus = "OK! Power cycle sensor";
                             setupCurrentId = setupNewId;
@@ -177,6 +202,7 @@ void UI::renderMainScreen(ExcavatorState *state) {
     calibrateBtn.draw(renderer);
     sensorSetupBtn.draw(renderer);
     sensorRawBtn.draw(renderer);
+    reloadBtn.draw(renderer);
 }
 
 void UI::renderConfigScreen() {
@@ -261,9 +287,10 @@ void UI::renderSensorSetupScreen() {
         drawText(renderer, getFontSmall(), 50, 115, "Current ID:");
     }
     currentIdMinus.draw(renderer);
+    currentIdMinus10.draw(renderer);
     
     // Current ID value box
-    SDL_Rect currentIdBox = {270, 100, 100, 60};
+    SDL_Rect currentIdBox = {290, 100, 120, 60};
     SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
     SDL_RenderFillRect(renderer, &currentIdBox);
     SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
@@ -271,19 +298,35 @@ void UI::renderSensorSetupScreen() {
     if (getFontLarge()) {
         char buf[8];
         snprintf(buf, sizeof(buf), "%d", setupCurrentId);
-        drawTextCentered(renderer, getFontLarge(), 270, 100, 100, 60, buf);
+        drawTextCentered(renderer, getFontLarge(), 290, 100, 120, 60, buf);
     }
     
+    currentIdPlus10.draw(renderer);
     currentIdPlus.draw(renderer);
+    readBtn.draw(renderer);
+
+    // Live data for current ID
+    if (getFontSmall()) {
+        char buf[64];
+        if (setupSensorConnected) {
+            snprintf(buf, sizeof(buf), "Roll: %.1f  Pitch: %.1f", setupSensorRoll, setupSensorPitch);
+            Color green = {0, 255, 0, 255};
+            drawTextCentered(renderer, getFontSmall(), 670, 100, 120, 60, buf, green);
+        } else {
+            Color red = {255, 100, 100, 255};
+            drawTextCentered(renderer, getFontSmall(), 670, 100, 120, 60, "NC", red);
+        }
+    }
 
     // New ID row
     if (getFontSmall()) {
         drawText(renderer, getFontSmall(), 50, 215, "New ID:");
     }
     newIdMinus.draw(renderer);
+    newIdMinus10.draw(renderer);
     
     // New ID value box
-    SDL_Rect newIdBox = {270, 200, 100, 60};
+    SDL_Rect newIdBox = {290, 200, 120, 60};
     SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
     SDL_RenderFillRect(renderer, &newIdBox);
     SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
@@ -291,10 +334,11 @@ void UI::renderSensorSetupScreen() {
     if (getFontLarge()) {
         char buf[8];
         snprintf(buf, sizeof(buf), "%d", setupNewId);
-        drawTextCentered(renderer, getFontLarge(), 270, 200, 100, 60, buf);
+        drawTextCentered(renderer, getFontLarge(), 290, 200, 120, 60, buf);
     }
     
-    newIdPlus.draw(renderer);
+    newIdPlus10.draw(renderer);
+    newIdPlus.draw(renderer);;
 
     // Assign button
     assignBtn.draw(renderer);
@@ -321,7 +365,8 @@ void UI::renderSensorRawScreen(ExcavatorState *state) {
         "Boom A",
         "Boom B", 
         "Stick",
-        "Tilt Hitch"
+        "Tilt Hitch",
+        "Test"
     };
 
     int rowHeight = 65;

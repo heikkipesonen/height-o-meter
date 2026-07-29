@@ -12,6 +12,7 @@ int main(int argc, char *argv[]) {
     state.sensors[SENSOR_BOOM_B].id = 3;
     state.sensors[SENSOR_STICK].id = 4;
     state.sensors[SENSOR_TILT].id = 5;
+    state.sensors[SENSOR_TEST].id = 80;  // Test sensor for setup screen
 
     // Sections config (legacy, for backward compat)
     Section a{0x02, 353, 0, 30, 0, 0, true, false};  // Boom A

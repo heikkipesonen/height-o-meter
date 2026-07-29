@@ -35,4 +35,7 @@ private:
     int setupCurrentId = 80;
     int setupNewId = 1;
     const char *setupStatus = "Connect one sensor";
+    double setupSensorRoll = 0;
+    double setupSensorPitch = 0;
+    bool setupSensorConnected = false;
 };

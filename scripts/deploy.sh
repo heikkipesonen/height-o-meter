@@ -1,15 +1,18 @@
 #!/bin/bash
-# Deploy to Raspberry Pi and run
+# Quick deploy to Pi - sync, rebuild, restart
 
-set -e
+PI="rpi@192.168.4.200"
+DIR="height-o-meter"
 
-PI_HOST="${PI_HOST:-pi@raspberrypi.local}"
-PI_PATH="${PI_PATH:-~/height-o-meter}"
+echo "Syncing..."
+rsync -q --exclude 'build/' ~/Documents/height-o-meter/src/ $PI:~/$DIR/src/
 
-echo "Syncing to $PI_HOST..."
-rsync -avz --exclude 'build/' \
-    "$(dirname "$0")/../" \
-    "$PI_HOST:$PI_PATH/"
+echo "Building..."
+ssh $PI "cd ~/$DIR && make -C build -j4"
 
-echo "Building and running on Pi..."
-ssh -t "$PI_HOST" "cd $PI_PATH && ./scripts/build.sh && SDL_VIDEODRIVER=kmsdrm ./build/heightmatic"
+echo "Restarting..."
+ssh $PI "sudo systemctl restart heightmatic"
+
+sleep 1
+echo "--- Status ---"
+ssh $PI "systemctl status heightmatic --no-pager | head -8"

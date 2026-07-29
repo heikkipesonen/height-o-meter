@@ -2,7 +2,7 @@
 
 #include <atomic>
 
-constexpr int NUM_SENSORS = 5;
+constexpr int NUM_SENSORS = 6;
 
 // Sensor locations
 enum SensorIndex {
@@ -10,7 +10,8 @@ enum SensorIndex {
     SENSOR_BOOM_A = 1,
     SENSOR_BOOM_B = 2,
     SENSOR_STICK = 3,
-    SENSOR_TILT = 4
+    SENSOR_TILT = 4,
+    SENSOR_TEST = 5  // For setup screen probing
 };
 
 struct Sensor {
@@ -44,6 +45,8 @@ struct ExcavatorState {
     std::atomic<double> section_b_angle{0};
     
     std::atomic<bool> running{true};
+    std::atomic<bool> reconnect{false};  // Set to trigger modbus reconnect
+    std::atomic<bool> paused{false};     // Pause polling for ID change
 };
 
 // Position calculations
@@ -53,7 +56,10 @@ double get_section_y(Section *section);
 // Sensor configuration
 // Changes sensor's Modbus address. Connect only ONE sensor at a time.
 // Returns 0 on success, -1 on failure.
-int update_sensor_id(int current_id, int new_id);
+int update_sensor_id(ExcavatorState *state, int current_id, int new_id);
+
+// Probe a sensor by ID. Returns true if responds, fills roll/pitch.
+bool probe_sensor(ExcavatorState *state, int id, double *roll, double *pitch);
 
 // Modbus thread entry point
 void excavator_thread(ExcavatorState *state, Section *a, Section *b);
