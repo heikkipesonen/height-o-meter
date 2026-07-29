@@ -100,21 +100,3 @@ void drawTextCentered(SDL_Renderer *renderer, TTF_Font *font, int x, int y, int 
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
 }
-
-void drawValueBox(SDL_Renderer *renderer, int x, int y, const char *label, double value, int width, int height) {
-    SDL_Rect box = {x, y, width, height};
-    SDL_SetRenderDrawColor(renderer, 40, 40, 50, 255);
-    SDL_RenderFillRect(renderer, &box);
-    SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, ACCENT_COLOR.a);
-    SDL_RenderDrawRect(renderer, &box);
-
-    if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), x + 10, y + 5, label, ACCENT_COLOR);
-    }
-
-    char valueStr[32];
-    snprintf(valueStr, sizeof(valueStr), "%.1f", value);
-    if (getFontLarge()) {
-        drawTextCentered(renderer, getFontLarge(), x, y + 30, width, height - 30, valueStr);
-    }
-}

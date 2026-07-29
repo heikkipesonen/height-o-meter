@@ -9,6 +9,12 @@ constexpr int SCREEN_HEIGHT = 480;
 
 enum class Screen { MAIN, CONFIG, CALIBRATE, SENSOR_SETUP, SENSOR_RAW };
 
+// Screen handler result
+struct ScreenResult {
+    Screen nextScreen;
+    bool handled;
+};
+
 class UI {
 public:
     UI();
@@ -24,18 +30,4 @@ private:
 
     void handleInput(ExcavatorState *state);
     void render(ExcavatorState *state);
-
-    void renderMainScreen(ExcavatorState *state);
-    void renderConfigScreen();
-    void renderCalibrateScreen(ExcavatorState *state);
-    void renderSensorSetupScreen();
-    void renderSensorRawScreen(ExcavatorState *state);
-
-    // Sensor setup state
-    int setupCurrentId = 80;
-    int setupNewId = 1;
-    const char *setupStatus = "Connect one sensor";
-    double setupSensorRoll = 0;
-    double setupSensorPitch = 0;
-    bool setupSensorConnected = false;
 };

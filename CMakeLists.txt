@@ -20,6 +20,10 @@ set(EXCAVATOR_SOURCES
 set(UI_SOURCES
     src/ui/ui.cpp
     src/ui/fonts.cpp
+    src/ui/main_screen.cpp
+    src/ui/calibrate_screen.cpp
+    src/ui/sensor_setup_screen.cpp
+    src/ui/sensor_raw_screen.cpp
 )
 
 add_executable(heightmatic
