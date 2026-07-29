@@ -170,12 +170,27 @@ void excavator_thread(ExcavatorState *state, Section *a, Section *b) {
             }
         }
         
-        // If all reads fail repeatedly, reconnect
+        // If all reads fail repeatedly, try USB reset then reconnect
         if (failures == NUM_SENSORS) {
             consecutive_failures++;
             if (consecutive_failures > 10) {
                 cleanup(ctx);
                 ctx = nullptr;
+                
+                // Try USB device reset
+                FILE *f = fopen("/sys/bus/usb/devices/1-1.3/authorized", "w");
+                if (f) {
+                    fprintf(f, "0");
+                    fclose(f);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                    f = fopen("/sys/bus/usb/devices/1-1.3/authorized", "w");
+                    if (f) {
+                        fprintf(f, "1");
+                        fclose(f);
+                        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+                    }
+                }
+                
                 consecutive_failures = 0;
             }
         } else {
