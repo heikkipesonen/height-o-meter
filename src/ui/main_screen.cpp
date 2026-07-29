@@ -26,7 +26,7 @@ ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
 }
 
 void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
-    int depth = (int)state->total_y;
+    int depth = (int)state->depth;
     bool goingUp = depth >= 0;
     
     int centerX = SCREEN_WIDTH / 2;
@@ -62,7 +62,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
     SDL_RenderDrawLine(renderer, 40, 200, SCREEN_WIDTH - 40, 200);
     
-    int reach = (int)state->total_x;
+    int reach = (int)state->reach;
     char reachStr[32];
     snprintf(reachStr, sizeof(reachStr), "%d", reach);
     if (getFontHuge()) {
@@ -70,7 +70,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     }
     
     bool allConnected = true;
-    for (int i = 0; i < NUM_SENSORS; i++) {
+    for (int i = 0; i < NUM_SENSORS - 1; i++) {  // Skip test sensor
         if (state->sensors[i].id != 0 && !state->sensors[i].connected) {
             allConnected = false;
             break;

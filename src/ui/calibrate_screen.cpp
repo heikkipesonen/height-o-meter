@@ -48,8 +48,8 @@ void renderCalibrateScreen(SDL_Renderer *renderer, ExcavatorState *state) {
         drawTextCentered(renderer, getFontSmall(), 0, 70, SCREEN_WIDTH, 30, "Position boom horizontally and press Zero");
     }
 
-    drawValueBox(renderer, SCREEN_WIDTH/2 - 160, 120, "X Position", state->total_x, 320, 110);
-    drawValueBox(renderer, SCREEN_WIDTH/2 - 160, 250, "Y Position", state->total_y, 320, 110);
+    drawValueBox(renderer, SCREEN_WIDTH/2 - 160, 120, "Reach", state->reach, 320, 110);
+    drawValueBox(renderer, SCREEN_WIDTH/2 - 160, 250, "Depth", state->depth, 320, 110);
 
     backBtn.draw(renderer);
     zeroBtn.draw(renderer);

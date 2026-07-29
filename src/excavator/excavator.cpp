@@ -15,22 +15,14 @@ double toRadians(double deg) {
     return deg * (PI / 180.0);
 }
 
-double get_y_of(double angle, int dist) {
-    return std::sin(toRadians(angle)) * dist;
-}
-
-double get_x_of(double angle, int dist) {
-    return std::cos(toRadians(angle)) * dist;
-}
-
 struct SensorData {
     double x;
     double y;
     bool valid = false;
 };
 
-void open_connection(modbus_t *&ctx) {
-    ctx = modbus_new_rtu("/dev/ttyUSB0", 9600, 'N', 8, 1);
+void open_connection(modbus_t *&ctx, const char* port, int baud) {
+    ctx = modbus_new_rtu(port, baud, 'N', 8, 1);
     if (ctx == nullptr) {
         return;
     }
@@ -83,14 +75,6 @@ bool read_sensor(modbus_t *ctx, Sensor *sensor) {
     return false;
 }
 
-void update_section(modbus_t *ctx, Section *s) {
-    modbus_set_slave(ctx, s->sensor_id);
-    std::this_thread::sleep_for(std::chrono::milliseconds(50));
-    SensorData data = read_angle(ctx);
-    s->value_x = data.x;
-    s->value_y = data.y;
-}
-
 int update_device_id(modbus_t *ctx, int newId) {
     int unlock = modbus_write_register(ctx, 0x69, 0xB588);
     if (unlock == -1) {
@@ -116,23 +100,47 @@ int update_device_id(modbus_t *ctx, int newId) {
     return 0;
 }
 
+// Get the angle to use from sensor based on config
+double getSensorAngle(const Sensor &sensor, const SensorConfig &cfg) {
+    double angle = (cfg.axis == MountAxis::X) ? sensor.roll : sensor.pitch;
+    return cfg.inverted ? -angle : angle;
+}
+
+// Calculate position from all arm segments
+void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
+    // Start at boom pin position
+    double x = config->pivot_offset_x_mm;
+    double y = config->base_height_mm + config->pivot_offset_y_mm;
+    
+    // Cumulative angle (each segment rotates relative to previous)
+    double cumulative_angle = 0;
+    
+    // Add each arm segment (skip superstructure[0] and test[5])
+    for (int i = SENSOR_BOOM_A; i <= SENSOR_TILT; i++) {
+        const Sensor &sensor = state->sensors[i];
+        const SensorConfig &cfg = config->sensors[i];
+        
+        if (!sensor.connected || cfg.length_mm == 0) continue;
+        
+        double segment_angle = getSensorAngle(sensor, cfg);
+        cumulative_angle += segment_angle;
+        
+        double rad = toRadians(cumulative_angle);
+        x += std::cos(rad) * cfg.length_mm;
+        y += std::sin(rad) * cfg.length_mm;
+    }
+    
+    state->reach = x;
+    state->depth = y;
+}
+
 } // anonymous namespace
 
-double get_section_x(Section *section) {
-    int multiplier = section->inv_x ? -1 : 1;
-    return (get_x_of(section->value_x, section->dist) + section->base_offset_x) * multiplier;
-}
-
-double get_section_y(Section *section) {
-    int multiplier = section->inv_y ? -1 : 1;
-    return (get_y_of(section->value_x, section->dist) + section->base_offset_y) * multiplier;
-}
-
-void excavator_thread(ExcavatorState *state, Section *a, Section *b) {
+void excavator_thread(ExcavatorState *state, const ExcavatorConfig *config) {
     modbus_t *ctx = nullptr;
     int consecutive_failures = 0;
     
-    open_connection(ctx);
+    open_connection(ctx, config->serial_port, config->baud_rate);
 
     while (state->running) {
         // Paused for ID change - close connection and wait
@@ -154,7 +162,7 @@ void excavator_thread(ExcavatorState *state, Section *a, Section *b) {
         
         // Reconnect if connection lost
         if (ctx == nullptr) {
-            open_connection(ctx);
+            open_connection(ctx, config->serial_port, config->baud_rate);
             if (ctx == nullptr) {
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 continue;
@@ -162,16 +170,16 @@ void excavator_thread(ExcavatorState *state, Section *a, Section *b) {
             consecutive_failures = 0;
         }
         
-        // Read all sensors
+        // Read sensors (skip test sensor at index 5)
         int failures = 0;
-        for (int i = 0; i < NUM_SENSORS; i++) {
+        for (int i = 0; i < NUM_SENSORS - 1; i++) {
             if (!read_sensor(ctx, &state->sensors[i])) {
                 failures++;
             }
         }
         
         // If all reads fail repeatedly, try USB reset then reconnect
-        if (failures == NUM_SENSORS) {
+        if (failures == NUM_SENSORS - 1) {
             consecutive_failures++;
             if (consecutive_failures > 10) {
                 cleanup(ctx);
@@ -197,14 +205,8 @@ void excavator_thread(ExcavatorState *state, Section *a, Section *b) {
             consecutive_failures = 0;
         }
         
-        // Legacy: also update old Section structs for backward compat
-        update_section(ctx, a);
-        update_section(ctx, b);
-
-        state->total_x = get_section_x(a) + get_section_x(b);
-        state->total_y = get_section_y(a) + get_section_y(b);
-        state->section_a_angle = a->value_x;
-        state->section_b_angle = b->value_x;
+        // Calculate bucket tip position
+        calculatePosition(state, config);
 
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
@@ -218,7 +220,7 @@ bool probe_sensor(ExcavatorState *state, int id, double *roll, double *pitch) {
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     
     modbus_t *ctx = nullptr;
-    open_connection(ctx);
+    open_connection(ctx, "/dev/ttyUSB0", 9600);
     
     if (ctx == nullptr) {
         state->paused = false;
@@ -250,7 +252,7 @@ int update_sensor_id(ExcavatorState *state, int current_id, int new_id) {
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     
     modbus_t *ctx = nullptr;
-    open_connection(ctx);
+    open_connection(ctx, "/dev/ttyUSB0", 9600);
     
     if (ctx == nullptr) {
         fprintf(stderr, "Failed to open connection\n");

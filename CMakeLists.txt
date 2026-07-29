@@ -17,6 +17,10 @@ set(EXCAVATOR_SOURCES
     src/excavator/excavator.cpp
 )
 
+set(CONFIG_SOURCES
+    src/config/config.cpp
+)
+
 set(UI_SOURCES
     src/ui/ui.cpp
     src/ui/fonts.cpp
@@ -29,6 +33,7 @@ set(UI_SOURCES
 add_executable(heightmatic
     src/main.cpp
     ${EXCAVATOR_SOURCES}
+    ${CONFIG_SOURCES}
     ${UI_SOURCES}
 )
 
