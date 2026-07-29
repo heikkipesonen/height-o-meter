@@ -25,5 +25,10 @@ struct ExcavatorState {
 double get_section_x(Section *section);
 double get_section_y(Section *section);
 
+// Sensor configuration
+// Changes sensor's Modbus address. Connect only ONE sensor at a time.
+// Returns 0 on success, -1 on failure.
+int update_sensor_id(int current_id, int new_id);
+
 // Modbus thread entry point
 void excavator_thread(ExcavatorState *state, Section *a, Section *b);

@@ -71,6 +71,34 @@ void update_section(modbus_t *ctx, Section *s) {
     s->value_y = data.y;
 }
 
+int update_device_id(modbus_t *ctx, int newId) {
+    // Unlock register to enable writing
+    int unlock = modbus_write_register(ctx, 0x69, 0xB588);
+    if (unlock == -1) {
+        fprintf(stderr, "Unlock failed: %s\n", modbus_strerror(errno));
+        return -1;
+    }
+
+    // 0x1A is slave_id register for Witmotion SINDT-485
+    int update = modbus_write_register(ctx, 0x1A, newId);
+    if (update == -1) {
+        fprintf(stderr, "Write ID failed: %s\n", modbus_strerror(errno));
+        return -1;
+    }
+
+    // Set slave to new ID for save command
+    modbus_set_slave(ctx, newId);
+
+    // Save to flash
+    int save = modbus_write_register(ctx, 0x0000, 0x0000);
+    if (save == -1) {
+        fprintf(stderr, "Save failed: %s\n", modbus_strerror(errno));
+        return -1;
+    }
+
+    return 0;
+}
+
 } // anonymous namespace
 
 double get_section_x(Section *section) {
@@ -100,4 +128,21 @@ void excavator_thread(ExcavatorState *state, Section *a, Section *b) {
     }
 
     cleanup(ctx);
+}
+
+int update_sensor_id(int current_id, int new_id) {
+    modbus_t *ctx = nullptr;
+    open_connection(ctx);
+    
+    if (ctx == nullptr) {
+        fprintf(stderr, "Failed to open connection\n");
+        return -1;
+    }
+
+    modbus_set_slave(ctx, current_id);
+    
+    int result = update_device_id(ctx, new_id);
+    
+    cleanup(ctx);
+    return result;
 }
