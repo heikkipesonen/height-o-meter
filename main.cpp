@@ -176,7 +176,6 @@ void modbusThread(Section *a, Section *b) {
 struct Button {
     SDL_Rect rect;
     const char *label;
-    bool hovered = false;
 
     bool contains(int x, int y) {
         return x >= rect.x && x <= rect.x + rect.w &&
@@ -184,8 +183,7 @@ struct Button {
     }
 
     void draw(SDL_Renderer *renderer) {
-        Color c = hovered ? BTN_HOVER_COLOR : BTN_COLOR;
-        SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
+        SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, BTN_COLOR.a);
         SDL_RenderFillRect(renderer, &rect);
 
         // Border
@@ -347,48 +345,33 @@ int main(int argc, char *argv[]) {
                 running = false;
             }
 
-            int mx = 0, my = 0;
-
-            // Handle both mouse and touch
-            if (e.type == SDL_MOUSEMOTION) {
-                mx = e.motion.x;
-                my = e.motion.y;
-                configBtn.hovered = configBtn.contains(mx, my);
-                calibrateBtn.hovered = calibrateBtn.contains(mx, my);
-                backBtn.hovered = backBtn.contains(mx, my);
-                zeroBtn.hovered = zeroBtn.contains(mx, my);
-            }
-
-            if (e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_FINGERDOWN) {
-                if (e.type == SDL_FINGERDOWN) {
-                    mx = (int)(e.tfinger.x * SCREEN_WIDTH);
-                    my = (int)(e.tfinger.y * SCREEN_HEIGHT);
-                } else {
-                    mx = e.button.x;
-                    my = e.button.y;
-                }
+            // Touch input
+            if (e.type == SDL_FINGERDOWN) {
+                int tx = (int)(e.tfinger.x * SCREEN_WIDTH);
+                int ty = (int)(e.tfinger.y * SCREEN_HEIGHT);
 
                 Screen screen = currentScreen.load();
 
                 if (screen == Screen::MAIN) {
-                    if (configBtn.contains(mx, my)) {
+                    if (configBtn.contains(tx, ty)) {
                         currentScreen = Screen::CONFIG;
-                    } else if (calibrateBtn.contains(mx, my)) {
+                    } else if (calibrateBtn.contains(tx, ty)) {
                         currentScreen = Screen::CALIBRATE;
                     }
                 } else if (screen == Screen::CONFIG) {
-                    if (backBtn.contains(mx, my)) {
+                    if (backBtn.contains(tx, ty)) {
                         currentScreen = Screen::MAIN;
                     }
                 } else if (screen == Screen::CALIBRATE) {
-                    if (backBtn.contains(mx, my)) {
+                    if (backBtn.contains(tx, ty)) {
                         currentScreen = Screen::MAIN;
-                    } else if (zeroBtn.contains(mx, my)) {
+                    } else if (zeroBtn.contains(tx, ty)) {
                         // TODO: implement zero calibration
                     }
                 }
             }
 
+            // Keyboard (for development/quitting)
             if (e.type == SDL_KEYDOWN) {
                 if (e.key.keysym.sym == SDLK_q) {
                     running = false;
