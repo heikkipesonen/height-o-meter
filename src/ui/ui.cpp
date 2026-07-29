@@ -29,8 +29,16 @@ struct Button {
 // Button definitions
 Button configBtn{{50, 400, 150, 60}, "Config"};
 Button calibrateBtn{{220, 400, 150, 60}, "Calibrate"};
+Button sensorSetupBtn{{390, 400, 150, 60}, "Sensors"};
 Button backBtn{{50, 400, 150, 60}, "Back"};
 Button zeroBtn{{SCREEN_WIDTH/2 - 75, 400, 150, 60}, "Zero"};
+
+// Sensor setup buttons
+Button currentIdMinus{{200, 100, 60, 60}, "-"};
+Button currentIdPlus{{380, 100, 60, 60}, "+"};
+Button newIdMinus{{200, 200, 60, 60}, "-"};
+Button newIdPlus{{380, 200, 60, 60}, "+"};
+Button assignBtn{{SCREEN_WIDTH/2 - 100, 320, 200, 60}, "Assign ID"};
 
 } // anonymous namespace
 
@@ -90,6 +98,8 @@ void UI::handleInput(ExcavatorState *state) {
                         currentScreen = Screen::CONFIG;
                     } else if (calibrateBtn.contains(tx, ty)) {
                         currentScreen = Screen::CALIBRATE;
+                    } else if (sensorSetupBtn.contains(tx, ty)) {
+                        currentScreen = Screen::SENSOR_SETUP;
                     }
                     break;
                 case Screen::CONFIG:
@@ -102,6 +112,27 @@ void UI::handleInput(ExcavatorState *state) {
                         currentScreen = Screen::MAIN;
                     } else if (zeroBtn.contains(tx, ty)) {
                         // TODO: implement zero calibration
+                    }
+                    break;
+                case Screen::SENSOR_SETUP:
+                    if (backBtn.contains(tx, ty)) {
+                        currentScreen = Screen::MAIN;
+                    } else if (currentIdMinus.contains(tx, ty)) {
+                        if (setupCurrentId > 1) setupCurrentId--;
+                    } else if (currentIdPlus.contains(tx, ty)) {
+                        if (setupCurrentId < 247) setupCurrentId++;
+                    } else if (newIdMinus.contains(tx, ty)) {
+                        if (setupNewId > 1) setupNewId--;
+                    } else if (newIdPlus.contains(tx, ty)) {
+                        if (setupNewId < 247) setupNewId++;
+                    } else if (assignBtn.contains(tx, ty)) {
+                        int result = update_sensor_id(setupCurrentId, setupNewId);
+                        if (result == 0) {
+                            setupStatus = "OK! Power cycle sensor";
+                            setupCurrentId = setupNewId;
+                        } else {
+                            setupStatus = "Failed - check connection";
+                        }
                     }
                     break;
             }
@@ -136,6 +167,7 @@ void UI::renderMainScreen(ExcavatorState *state) {
 
     configBtn.draw(renderer);
     calibrateBtn.draw(renderer);
+    sensorSetupBtn.draw(renderer);
 }
 
 void UI::renderConfigScreen() {
@@ -195,9 +227,72 @@ void UI::render(ExcavatorState *state) {
         case Screen::CALIBRATE:
             renderCalibrateScreen(state);
             break;
+        case Screen::SENSOR_SETUP:
+            renderSensorSetupScreen();
+            break;
     }
 
     SDL_RenderPresent(renderer);
+}
+
+void UI::renderSensorSetupScreen() {
+    // Title bar
+    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
+    SDL_SetRenderDrawColor(renderer, 50, 50, 40, 255);
+    SDL_RenderFillRect(renderer, &titleBar);
+    if (getFontMedium()) {
+        drawTextCentered(renderer, getFontMedium(), 0, 0, SCREEN_WIDTH, 50, "SENSOR SETUP", ACCENT_COLOR);
+    }
+
+    // Current ID row
+    if (getFontSmall()) {
+        drawText(renderer, getFontSmall(), 50, 115, "Current ID:");
+    }
+    currentIdMinus.draw(renderer);
+    
+    // Current ID value box
+    SDL_Rect currentIdBox = {270, 100, 100, 60};
+    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
+    SDL_RenderFillRect(renderer, &currentIdBox);
+    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
+    SDL_RenderDrawRect(renderer, &currentIdBox);
+    if (getFontLarge()) {
+        char buf[8];
+        snprintf(buf, sizeof(buf), "%d", setupCurrentId);
+        drawTextCentered(renderer, getFontLarge(), 270, 100, 100, 60, buf);
+    }
+    
+    currentIdPlus.draw(renderer);
+
+    // New ID row
+    if (getFontSmall()) {
+        drawText(renderer, getFontSmall(), 50, 215, "New ID:");
+    }
+    newIdMinus.draw(renderer);
+    
+    // New ID value box
+    SDL_Rect newIdBox = {270, 200, 100, 60};
+    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
+    SDL_RenderFillRect(renderer, &newIdBox);
+    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
+    SDL_RenderDrawRect(renderer, &newIdBox);
+    if (getFontLarge()) {
+        char buf[8];
+        snprintf(buf, sizeof(buf), "%d", setupNewId);
+        drawTextCentered(renderer, getFontLarge(), 270, 200, 100, 60, buf);
+    }
+    
+    newIdPlus.draw(renderer);
+
+    // Assign button
+    assignBtn.draw(renderer);
+
+    // Status text
+    if (getFontSmall()) {
+        drawTextCentered(renderer, getFontSmall(), 0, 390, SCREEN_WIDTH, 30, setupStatus);
+    }
+
+    backBtn.draw(renderer);
 }
 
 void UI::run(ExcavatorState *state) {
