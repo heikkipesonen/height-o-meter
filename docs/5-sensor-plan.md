@@ -35,20 +35,34 @@ Calibration process: Position arm segment horizontal/level, read raw sensor valu
 - **Slew center to boom pivot Y**: Side offset if boom isn't centered (mm)
 - **Slew center to boom pivot Z**: Height offset (mm)
 
-## Slew Detection (from tilt change)
-Slew angle is calculated from superstructure tilt sensor, not measured directly.
+## Slew Detection (dual method)
+Slew angle is calculated from superstructure sensor using two methods:
 
-**How it works:**
-- On a slope, the ground tilt appears as roll/pitch on the superstructure sensor
-- When the cab rotates (slews), the tilt "rotates" through roll and pitch axes
-- Slew angle = `atan2(roll, pitch)` relative to zero position
-- Ground slope magnitude = `sqrt(roll² + pitch²)` (constant while machine stationary)
+**Method 1: Tilt vector rotation (primary)**
+- On a slope, ground tilt appears as roll/pitch on superstructure sensor
+- When cab rotates, tilt "rotates" through roll and pitch axes
+- Slew angle = `atan2(roll, pitch)` relative to zero reference
+- Ground slope magnitude = `sqrt(roll² + pitch²)`
+- Works well on slopes, unreliable when slope < ~0.5°
+
+**Method 2: Compass/Yaw (fallback)**
+- Slew angle = `current_yaw - zero_yaw`
+- Works on flat ground
+- Subject to drift and magnetic interference from steel
+
+**Combined approach:**
+- Store both tilt vector and yaw when setting zero point
+- Use tilt method when slope > 0.5° threshold
+- Fall back to compass when machine is nearly level
+- Optional: warn user if methods diverge significantly (magnetic interference)
 
 **Reference:**
-- When user sets zero point, system also stores the tilt vector (roll/pitch) as slew = 0° reference
-- Subsequent slew calculated as rotation from that reference tilt vector
+- When user sets zero point, system stores:
+  - Tilt vector (roll/pitch) for tilt-based slew
+  - Yaw reading for compass-based slew
+- Subsequent slew calculated from both, primary method selected by slope magnitude
 
-**Limitation:** Only works on slopes. On flat ground, slew doesn't matter anyway - bucket height is unaffected by cab rotation when machine is level.
+**Limitation:** On perfectly flat ground with magnetic interference, slew detection may be inaccurate. Re-zero after significant slewing in these conditions.
 
 ## Tilt Hitch Configuration
 The tilt hitch connects stick to bucket with two degrees of freedom:
@@ -175,27 +189,34 @@ src/
 - **Mode 1: Single point (level reference)**
   - Add "Set Point A" button on main screen
   - Store current world XYZ as reference
-  - Also store tilt vector (roll/pitch) as slew = 0° reference
+  - Also store tilt vector and yaw as slew = 0° reference
   - Display shows deviation from horizontal plane at A
 
 - **Mode 2: Two-point (auto grade)**
   - "Set Point A" then "Set Point B"
   - Both points captured in world coordinates (tilt-compensated)
   - System calculates grade automatically from A to B
-  - Display shows deviation from slope line
+  - Slope extends as a **plane** (not just a line) - same grade sideways
+  - Display shows deviation from slope plane
 
 - **Mode 3: Point + manual grade**
   - Set point A, enter grade manually (% or °)
   - Optionally set point B for direction only
   - If no B: slope direction is away from machine (at time of A)
   - If B set: slope goes from A toward B at manual grade
+  - Slope extends as a plane perpendicular to grade direction
 
 **Display math:**
 ```
-slope_vector = B - A (or derived from manual grade + direction)
-For current bucket position P:
-- Project P onto slope line
-- deviation = P.z - interpolated_z_on_slope
+slope_plane defined by:
+- Point A (origin)
+- Grade direction (toward B or away from machine)
+- Grade angle (auto-calculated or manual)
+- Plane extends sideways at same grade
+
+For current bucket position P (full XYZ from kinematics + slew):
+- Calculate plane Z at bucket's XY position
+- deviation = P.z - plane_z_at(P.x, P.y)
 ```
 
 **Sensor calibration:**
@@ -203,7 +224,7 @@ For current bucket position P:
   - "Set Level" button per sensor: stores current raw reading as mounting offset
   - User positions each arm segment level/horizontal, presses button
 
-- **Test**: Set zero, move boom, position shows deviation; set two-point slope, verify grade; calibrate sensor, offset applied
+- **Test**: Set zero, move boom, position shows deviation; set two-point slope, verify grade; slew and verify still on plane; calibrate sensor, offset applied
 - **Demo**: Set A and B points, see calculated grade, bucket follows slope line
 
 ### Task 8: Update main screen display
