@@ -7,7 +7,7 @@
 constexpr int SCREEN_WIDTH = 800;
 constexpr int SCREEN_HEIGHT = 480;
 
-enum class Screen { MAIN, CONFIG, CALIBRATE, SENSOR_SETUP };
+enum class Screen { MAIN, CONFIG, CALIBRATE, SENSOR_SETUP, SENSOR_RAW };
 
 class UI {
 public:
@@ -29,6 +29,7 @@ private:
     void renderConfigScreen();
     void renderCalibrateScreen(ExcavatorState *state);
     void renderSensorSetupScreen();
+    void renderSensorRawScreen(ExcavatorState *state);
 
     // Sensor setup state
     int setupCurrentId = 80;

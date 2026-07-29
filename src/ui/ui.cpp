@@ -27,9 +27,10 @@ struct Button {
 };
 
 // Button definitions
-Button configBtn{{50, 400, 150, 60}, "Config"};
-Button calibrateBtn{{220, 400, 150, 60}, "Calibrate"};
-Button sensorSetupBtn{{390, 400, 150, 60}, "Sensors"};
+Button configBtn{{50, 400, 120, 60}, "Config"};
+Button calibrateBtn{{180, 400, 120, 60}, "Calibrate"};
+Button sensorSetupBtn{{310, 400, 120, 60}, "Setup"};
+Button sensorRawBtn{{440, 400, 120, 60}, "Raw"};
 Button backBtn{{50, 400, 150, 60}, "Back"};
 Button zeroBtn{{SCREEN_WIDTH/2 - 75, 400, 150, 60}, "Zero"};
 
@@ -100,6 +101,8 @@ void UI::handleInput(ExcavatorState *state) {
                         currentScreen = Screen::CALIBRATE;
                     } else if (sensorSetupBtn.contains(tx, ty)) {
                         currentScreen = Screen::SENSOR_SETUP;
+                    } else if (sensorRawBtn.contains(tx, ty)) {
+                        currentScreen = Screen::SENSOR_RAW;
                     }
                     break;
                 case Screen::CONFIG:
@@ -135,6 +138,11 @@ void UI::handleInput(ExcavatorState *state) {
                         }
                     }
                     break;
+                case Screen::SENSOR_RAW:
+                    if (backBtn.contains(tx, ty)) {
+                        currentScreen = Screen::MAIN;
+                    }
+                    break;
             }
         }
 
@@ -168,6 +176,7 @@ void UI::renderMainScreen(ExcavatorState *state) {
     configBtn.draw(renderer);
     calibrateBtn.draw(renderer);
     sensorSetupBtn.draw(renderer);
+    sensorRawBtn.draw(renderer);
 }
 
 void UI::renderConfigScreen() {
@@ -230,6 +239,9 @@ void UI::render(ExcavatorState *state) {
         case Screen::SENSOR_SETUP:
             renderSensorSetupScreen();
             break;
+        case Screen::SENSOR_RAW:
+            renderSensorRawScreen(state);
+            break;
     }
 
     SDL_RenderPresent(renderer);
@@ -290,6 +302,69 @@ void UI::renderSensorSetupScreen() {
     // Status text
     if (getFontSmall()) {
         drawTextCentered(renderer, getFontSmall(), 0, 390, SCREEN_WIDTH, 30, setupStatus);
+    }
+
+    backBtn.draw(renderer);
+}
+
+void UI::renderSensorRawScreen(ExcavatorState *state) {
+    // Title bar
+    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
+    SDL_SetRenderDrawColor(renderer, 40, 50, 50, 255);
+    SDL_RenderFillRect(renderer, &titleBar);
+    if (getFontMedium()) {
+        drawTextCentered(renderer, getFontMedium(), 0, 0, SCREEN_WIDTH, 50, "RAW SENSOR DATA", ACCENT_COLOR);
+    }
+
+    const char *sensorNames[] = {
+        "Superstructure",
+        "Boom A",
+        "Boom B", 
+        "Stick",
+        "Tilt Hitch"
+    };
+
+    int rowHeight = 65;
+    int startY = 60;
+
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        Sensor *s = &state->sensors[i];
+        int y = startY + i * rowHeight;
+
+        // Background
+        SDL_Rect row = {10, y, SCREEN_WIDTH - 20, rowHeight - 5};
+        if (s->connected) {
+            SDL_SetRenderDrawColor(renderer, 40, 50, 40, 255);
+        } else {
+            SDL_SetRenderDrawColor(renderer, 50, 40, 40, 255);
+        }
+        SDL_RenderFillRect(renderer, &row);
+        SDL_SetRenderDrawColor(renderer, 60, 60, 70, 255);
+        SDL_RenderDrawRect(renderer, &row);
+
+        if (getFontSmall()) {
+            // Sensor name and ID
+            char nameBuf[32];
+            snprintf(nameBuf, sizeof(nameBuf), "%s (ID:%d)", sensorNames[i], s->id);
+            drawText(renderer, getFontSmall(), 20, y + 8, nameBuf);
+
+            // Roll/Pitch values
+            char rollBuf[32], pitchBuf[32];
+            if (s->connected) {
+                snprintf(rollBuf, sizeof(rollBuf), "Roll: %.1f", s->roll);
+                snprintf(pitchBuf, sizeof(pitchBuf), "Pitch: %.1f", s->pitch);
+            } else {
+                snprintf(rollBuf, sizeof(rollBuf), "Roll: --");
+                snprintf(pitchBuf, sizeof(pitchBuf), "Pitch: --");
+            }
+            drawText(renderer, getFontSmall(), 300, y + 8, rollBuf);
+            drawText(renderer, getFontSmall(), 500, y + 8, pitchBuf);
+
+            // Status
+            const char *status = s->connected ? "OK" : "NC";
+            Color statusColor = s->connected ? Color{100, 200, 100, 255} : Color{200, 100, 100, 255};
+            drawText(renderer, getFontSmall(), 700, y + 8, status, statusColor);
+        }
     }
 
     backBtn.draw(renderer);

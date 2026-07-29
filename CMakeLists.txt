@@ -40,4 +40,5 @@ target_link_libraries(heightmatic PRIVATE
     ${SDL2_LIBRARIES}
     ${SDL2_TTF_LIBRARIES}
     pthread
+    atomic
 )

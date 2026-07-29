@@ -2,6 +2,26 @@
 
 #include <atomic>
 
+constexpr int NUM_SENSORS = 5;
+
+// Sensor locations
+enum SensorIndex {
+    SENSOR_SUPERSTRUCTURE = 0,
+    SENSOR_BOOM_A = 1,
+    SENSOR_BOOM_B = 2,
+    SENSOR_STICK = 3,
+    SENSOR_TILT = 4
+};
+
+struct Sensor {
+    int id = 0;                  // Modbus address
+    double roll = 0;             // X axis (degrees)
+    double pitch = 0;            // Y axis (degrees)
+    double roll_offset = 0;      // Calibration offset
+    double pitch_offset = 0;     // Calibration offset
+    bool connected = false;      // Last read succeeded
+};
+
 struct Section {
     int sensor_id = 0;
     int dist = 0;
@@ -14,10 +34,15 @@ struct Section {
 };
 
 struct ExcavatorState {
+    // Raw sensor data (updated by modbus thread)
+    Sensor sensors[NUM_SENSORS];
+    
+    // Calculated position (legacy, keep for now)
     std::atomic<double> total_x{0};
     std::atomic<double> total_y{0};
     std::atomic<double> section_a_angle{0};
     std::atomic<double> section_b_angle{0};
+    
     std::atomic<bool> running{true};
 };
 

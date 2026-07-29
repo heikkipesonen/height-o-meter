@@ -26,6 +26,7 @@ double get_x_of(double angle, int dist) {
 struct SensorData {
     double x;
     double y;
+    bool valid = false;
 };
 
 void open_connection(modbus_t *&ctx) {
@@ -51,6 +52,7 @@ SensorData read_angle(modbus_t *ctx) {
     int rc = modbus_read_registers(ctx, 61, 2, tab_reg);
     if (rc == -1) {
         fprintf(stderr, "%s\n", modbus_strerror(errno));
+        data.valid = false;
         return data;
     }
 
@@ -59,8 +61,26 @@ SensorData read_angle(modbus_t *ctx) {
 
     data.x = (roll_raw / 32768.0) * 180.0;
     data.y = (pitch_raw / 32768.0) * 180.0;
+    data.valid = true;
 
     return data;
+}
+
+bool read_sensor(modbus_t *ctx, Sensor *sensor) {
+    if (sensor->id == 0) return false;
+    
+    modbus_set_slave(ctx, sensor->id);
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    
+    SensorData data = read_angle(ctx);
+    if (data.valid) {
+        sensor->roll = data.x - sensor->roll_offset;
+        sensor->pitch = data.y - sensor->pitch_offset;
+        sensor->connected = true;
+        return true;
+    }
+    sensor->connected = false;
+    return false;
 }
 
 void update_section(modbus_t *ctx, Section *s) {
@@ -116,6 +136,12 @@ void excavator_thread(ExcavatorState *state, Section *a, Section *b) {
     open_connection(ctx);
 
     while (state->running) {
+        // Read all 5 sensors
+        for (int i = 0; i < NUM_SENSORS; i++) {
+            read_sensor(ctx, &state->sensors[i]);
+        }
+        
+        // Legacy: also update old Section structs for backward compat
         update_section(ctx, a);
         update_section(ctx, b);
 
