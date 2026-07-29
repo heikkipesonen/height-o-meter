@@ -1,1 +1,0 @@
-/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/heightmatic.dir/link.d CMakeFiles/heightmatic.dir/main.cpp.o CMakeFiles/heightmatic.dir/utils.cpp.o "CMakeFiles/heightmatic.dir/device-handler.cpp.o" -o heightmatic   -L/home/possu/libmodbus/src/.libs  -Wl,-rpath,/home/possu/libmodbus/src/.libs -lmodbus -lnotcurses
