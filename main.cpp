@@ -1,7 +1,9 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <atomic>
 #include <chrono>
 #include <cstdio>
+#include <string>
 #include <thread>
 
 #include "include/device-handler.h"
@@ -22,6 +24,97 @@ constexpr Color TEXT_COLOR = {220, 220, 220, 255};
 constexpr Color ACCENT_COLOR = {80, 140, 200, 255};
 constexpr Color BTN_COLOR = {60, 60, 80, 255};
 constexpr Color BTN_HOVER_COLOR = {80, 80, 120, 255};
+
+// Font
+TTF_Font *fontLarge = nullptr;
+TTF_Font *fontMedium = nullptr;
+TTF_Font *fontSmall = nullptr;
+
+bool initFonts() {
+    if (TTF_Init() < 0) {
+        printf("TTF init failed: %s\n", TTF_GetError());
+        return false;
+    }
+
+    // Try common font paths
+    const char *fontPaths[] = {
+        "/usr/share/fonts/TTF/DejaVuSans.ttf",           // Arch
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", // Debian
+        "/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf", // Fedora
+        "/usr/share/fonts/TTF/Roboto-Regular.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+        nullptr
+    };
+
+    const char *foundPath = nullptr;
+    for (int i = 0; fontPaths[i] != nullptr; i++) {
+        FILE *f = fopen(fontPaths[i], "r");
+        if (f) {
+            fclose(f);
+            foundPath = fontPaths[i];
+            break;
+        }
+    }
+
+    if (!foundPath) {
+        printf("No font found. Install dejavu fonts.\n");
+        return false;
+    }
+
+    fontLarge = TTF_OpenFont(foundPath, 48);
+    fontMedium = TTF_OpenFont(foundPath, 28);
+    fontSmall = TTF_OpenFont(foundPath, 18);
+
+    return fontLarge && fontMedium && fontSmall;
+}
+
+void closeFonts() {
+    if (fontLarge) TTF_CloseFont(fontLarge);
+    if (fontMedium) TTF_CloseFont(fontMedium);
+    if (fontSmall) TTF_CloseFont(fontSmall);
+    TTF_Quit();
+}
+
+void drawText(SDL_Renderer *renderer, TTF_Font *font, int x, int y, const char *text, Color color = TEXT_COLOR) {
+    SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
+    SDL_Surface *surface = TTF_RenderText_Blended(font, text, sdlColor);
+    if (!surface) return;
+
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!texture) {
+        SDL_FreeSurface(surface);
+        return;
+    }
+
+    SDL_Rect dest = {x, y, surface->w, surface->h};
+    SDL_RenderCopy(renderer, texture, nullptr, &dest);
+
+    SDL_DestroyTexture(texture);
+    SDL_FreeSurface(surface);
+}
+
+void drawTextCentered(SDL_Renderer *renderer, TTF_Font *font, int x, int y, int w, int h, const char *text, Color color = TEXT_COLOR) {
+    SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
+    SDL_Surface *surface = TTF_RenderText_Blended(font, text, sdlColor);
+    if (!surface) return;
+
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!texture) {
+        SDL_FreeSurface(surface);
+        return;
+    }
+
+    SDL_Rect dest = {
+        x + (w - surface->w) / 2,
+        y + (h - surface->h) / 2,
+        surface->w,
+        surface->h
+    };
+    SDL_RenderCopy(renderer, texture, nullptr, &dest);
+
+    SDL_DestroyTexture(texture);
+    SDL_FreeSurface(surface);
+}
 
 // UI State
 enum class Screen { MAIN, CONFIG, CALIBRATE };
@@ -98,53 +191,58 @@ struct Button {
         // Border
         SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, ACCENT_COLOR.a);
         SDL_RenderDrawRect(renderer, &rect);
+
+        // Label
+        if (fontMedium) {
+            drawTextCentered(renderer, fontMedium, rect.x, rect.y, rect.w, rect.h, label);
+        }
     }
 };
 
 void drawText(SDL_Renderer *renderer, int x, int y, const char *text, int scale = 2) {
-    // Simple placeholder - in real app use SDL_ttf
-    // For now just draw a rectangle where text would be
-    int len = strlen(text);
-    SDL_Rect r = {x, y, len * 8 * scale, 12 * scale};
-    SDL_SetRenderDrawColor(renderer, TEXT_COLOR.r, TEXT_COLOR.g, TEXT_COLOR.b, TEXT_COLOR.a);
-    SDL_RenderDrawRect(renderer, &r);
+    // Use TTF if available, fallback to placeholder
+    if (fontMedium) {
+        drawText(renderer, fontMedium, x, y, text);
+    }
 }
 
-void drawNumber(SDL_Renderer *renderer, int x, int y, double value, int width = 200, int height = 80) {
-    // Draw box with number (placeholder visualization)
+void drawValueBox(SDL_Renderer *renderer, int x, int y, const char *label, double value, int width = 300, int height = 120) {
+    // Box background
     SDL_Rect box = {x, y, width, height};
     SDL_SetRenderDrawColor(renderer, 40, 40, 50, 255);
     SDL_RenderFillRect(renderer, &box);
     SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, ACCENT_COLOR.a);
     SDL_RenderDrawRect(renderer, &box);
 
-    // Draw bar representing value (simple visualization)
-    int barWidth = (int)(abs(value) * 2) % width;
-    SDL_Rect bar = {x + 5, y + height/2 - 10, barWidth, 20};
-    SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, ACCENT_COLOR.a);
-    SDL_RenderFillRect(renderer, &bar);
+    // Label
+    if (fontSmall) {
+        drawText(renderer, fontSmall, x + 10, y + 5, label, ACCENT_COLOR);
+    }
+
+    // Value
+    char valueStr[32];
+    snprintf(valueStr, sizeof(valueStr), "%.1f", value);
+    if (fontLarge) {
+        drawTextCentered(renderer, fontLarge, x, y + 30, width, height - 30, valueStr);
+    }
 }
 
 void renderMainScreen(SDL_Renderer *renderer, Button &configBtn, Button &calibrateBtn) {
-    // Title area
-    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 60};
+    // Title bar
+    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
     SDL_SetRenderDrawColor(renderer, 40, 40, 50, 255);
     SDL_RenderFillRect(renderer, &titleBar);
+    if (fontMedium) {
+        drawTextCentered(renderer, fontMedium, 0, 0, SCREEN_WIDTH, 50, "HEIGHT-O-METER", ACCENT_COLOR);
+    }
 
     // Position display
-    drawNumber(renderer, 50, 100, total_x, 300, 120);
-    drawNumber(renderer, 450, 100, total_y, 300, 120);
-
-    // Labels (placeholder)
-    SDL_Rect labelX = {50, 80, 20, 16};
-    SDL_Rect labelY = {450, 80, 20, 16};
-    SDL_SetRenderDrawColor(renderer, TEXT_COLOR.r, TEXT_COLOR.g, TEXT_COLOR.b, TEXT_COLOR.a);
-    SDL_RenderFillRect(renderer, &labelX);
-    SDL_RenderFillRect(renderer, &labelY);
+    drawValueBox(renderer, 50, 80, "X Position (mm)", total_x, 340, 140);
+    drawValueBox(renderer, 410, 80, "Y Position (mm)", total_y, 340, 140);
 
     // Section angles
-    drawNumber(renderer, 50, 280, section_a_angle, 200, 60);
-    drawNumber(renderer, 300, 280, section_b_angle, 200, 60);
+    drawValueBox(renderer, 50, 250, "Section A", section_a_angle, 220, 100);
+    drawValueBox(renderer, 290, 250, "Section B", section_b_angle, 220, 100);
 
     // Buttons
     configBtn.draw(renderer);
@@ -153,17 +251,25 @@ void renderMainScreen(SDL_Renderer *renderer, Button &configBtn, Button &calibra
 
 void renderConfigScreen(SDL_Renderer *renderer, Button &backBtn) {
     // Title
-    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 60};
+    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
     SDL_SetRenderDrawColor(renderer, 50, 40, 40, 255);
     SDL_RenderFillRect(renderer, &titleBar);
+    if (fontMedium) {
+        drawTextCentered(renderer, fontMedium, 0, 0, SCREEN_WIDTH, 50, "CONFIGURATION", ACCENT_COLOR);
+    }
 
-    // Config options (placeholder boxes)
+    // Config options
+    const char *options[] = {"Section A Distance", "Section A Offset", "Section B Distance", "Section B Offset"};
     for (int i = 0; i < 4; i++) {
-        SDL_Rect option = {50, 100 + i * 80, SCREEN_WIDTH - 100, 60};
+        SDL_Rect option = {50, 70 + i * 70, SCREEN_WIDTH - 100, 55};
         SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
         SDL_RenderFillRect(renderer, &option);
         SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
         SDL_RenderDrawRect(renderer, &option);
+
+        if (fontSmall) {
+            drawText(renderer, fontSmall, option.x + 15, option.y + 18, options[i]);
+        }
     }
 
     backBtn.draw(renderer);
@@ -171,13 +277,21 @@ void renderConfigScreen(SDL_Renderer *renderer, Button &backBtn) {
 
 void renderCalibrateScreen(SDL_Renderer *renderer, Button &backBtn, Button &zeroBtn) {
     // Title
-    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 60};
+    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
     SDL_SetRenderDrawColor(renderer, 40, 50, 40, 255);
     SDL_RenderFillRect(renderer, &titleBar);
+    if (fontMedium) {
+        drawTextCentered(renderer, fontMedium, 0, 0, SCREEN_WIDTH, 50, "CALIBRATE", ACCENT_COLOR);
+    }
+
+    // Instructions
+    if (fontSmall) {
+        drawTextCentered(renderer, fontSmall, 0, 70, SCREEN_WIDTH, 30, "Position boom horizontally and press Zero");
+    }
 
     // Current readings
-    drawNumber(renderer, SCREEN_WIDTH/2 - 150, 150, total_x, 300, 100);
-    drawNumber(renderer, SCREEN_WIDTH/2 - 150, 280, total_y, 300, 100);
+    drawValueBox(renderer, SCREEN_WIDTH/2 - 160, 120, "X Position", total_x, 320, 110);
+    drawValueBox(renderer, SCREEN_WIDTH/2 - 160, 250, "Y Position", total_y, 320, 110);
 
     backBtn.draw(renderer);
     zeroBtn.draw(renderer);
@@ -188,6 +302,11 @@ int main(int argc, char *argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("SDL init failed: %s\n", SDL_GetError());
         return 1;
+    }
+
+    // Init fonts
+    if (!initFonts()) {
+        printf("Warning: fonts not loaded, text will not display.\n");
     }
 
     SDL_Window *window = SDL_CreateWindow(
@@ -303,6 +422,7 @@ int main(int argc, char *argv[]) {
 
     modbus.join();
 
+    closeFonts();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
