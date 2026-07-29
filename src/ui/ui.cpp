@@ -17,21 +17,17 @@ struct Button {
         SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, BTN_COLOR.a);
         SDL_RenderFillRect(renderer, &rect);
 
-        SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, ACCENT_COLOR.a);
-        SDL_RenderDrawRect(renderer, &rect);
-
         if (getFontMedium()) {
             drawTextCentered(renderer, getFontMedium(), rect.x, rect.y, rect.w, rect.h, label);
         }
     }
 };
 
-// Button definitions
-Button configBtn{{50, 400, 120, 60}, "Config"};
-Button calibrateBtn{{180, 400, 120, 60}, "Calibrate"};
-Button sensorSetupBtn{{310, 400, 120, 60}, "Setup"};
-Button sensorRawBtn{{440, 400, 120, 60}, "Raw"};
-Button reloadBtn{{570, 400, 120, 60}, "Reload"};
+// Main screen buttons (bottom row)
+Button calibrateBtn{{10, 410, 190, 60}, "CAL"};
+Button sensorSetupBtn{{210, 410, 190, 60}, "SETUP"};
+Button sensorRawBtn{{410, 410, 190, 60}, "RAW"};
+Button reloadBtn{{610, 410, 180, 60}, "ZERO"};
 Button backBtn{{50, 400, 150, 60}, "Back"};
 Button zeroBtn{{SCREEN_WIDTH/2 - 75, 400, 150, 60}, "Zero"};
 
@@ -101,16 +97,14 @@ void UI::handleInput(ExcavatorState *state) {
 
             switch (currentScreen) {
                 case Screen::MAIN:
-                    if (configBtn.contains(tx, ty)) {
-                        currentScreen = Screen::CONFIG;
-                    } else if (calibrateBtn.contains(tx, ty)) {
+                    if (calibrateBtn.contains(tx, ty)) {
                         currentScreen = Screen::CALIBRATE;
                     } else if (sensorSetupBtn.contains(tx, ty)) {
                         currentScreen = Screen::SENSOR_SETUP;
                     } else if (sensorRawBtn.contains(tx, ty)) {
                         currentScreen = Screen::SENSOR_RAW;
                     } else if (reloadBtn.contains(tx, ty)) {
-                        state->reconnect = true;
+                        // TODO: zero calibration
                     }
                     break;
                 case Screen::CONFIG:
@@ -182,23 +176,70 @@ void UI::handleInput(ExcavatorState *state) {
 }
 
 void UI::renderMainScreen(ExcavatorState *state) {
-    // Title bar
-    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
-    SDL_SetRenderDrawColor(renderer, 40, 40, 50, 255);
-    SDL_RenderFillRect(renderer, &titleBar);
-    if (getFontMedium()) {
-        drawTextCentered(renderer, getFontMedium(), 0, 0, SCREEN_WIDTH, 50, "HEIGHT-O-METER", ACCENT_COLOR);
+    // DEPTH section (top half)
+    int depth = (int)state->total_y;
+    bool goingUp = depth >= 0;
+    
+    // Center everything
+    int centerX = SCREEN_WIDTH / 2;
+    
+    // Draw arrow centered with value
+    int arrowCenterY = 100;
+    int arrowX = centerX - 180;
+    SDL_SetRenderDrawColor(renderer, goingUp ? 0 : 255, goingUp ? 200 : 60, 60, 255);
+    
+    if (goingUp) {
+        // Up arrow
+        SDL_Rect arrowBody = {arrowX + 15, arrowCenterY, 50, 60};
+        SDL_RenderFillRect(renderer, &arrowBody);
+        for (int y = 0; y < 60; y++) {
+            int halfWidth = 55 - y;
+            SDL_RenderDrawLine(renderer, arrowX + 40 - halfWidth, arrowCenterY - y, 
+                              arrowX + 40 + halfWidth, arrowCenterY - y);
+        }
+    } else {
+        // Down arrow
+        SDL_Rect arrowBody = {arrowX + 15, arrowCenterY - 60, 50, 60};
+        SDL_RenderFillRect(renderer, &arrowBody);
+        for (int y = 0; y < 60; y++) {
+            int halfWidth = 55 - y;
+            SDL_RenderDrawLine(renderer, arrowX + 40 - halfWidth, arrowCenterY + y, 
+                              arrowX + 40 + halfWidth, arrowCenterY + y);
+        }
     }
+    
+    // Depth value
+    char depthStr[32];
+    snprintf(depthStr, sizeof(depthStr), "%d", depth < 0 ? -depth : depth);
+    if (getFontHuge()) {
+        drawText(renderer, getFontHuge(), arrowX + 100, 35, depthStr, {255, 255, 255, 255});
+    }
+    
+    // Separator line
+    SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
+    SDL_RenderDrawLine(renderer, 40, 200, SCREEN_WIDTH - 40, 200);
+    
+    // REACH section (centered)
+    int reach = (int)state->total_x;
+    char reachStr[32];
+    snprintf(reachStr, sizeof(reachStr), "%d", reach);
+    if (getFontHuge()) {
+        drawTextCentered(renderer, getFontHuge(), 0, 220, SCREEN_WIDTH, 150, reachStr, {255, 255, 255, 255});
+    }
+    
+    // Sensor status indicator
+    bool allConnected = true;
+    for (int i = 0; i < NUM_SENSORS; i++) {
+        if (state->sensors[i].id != 0 && !state->sensors[i].connected) {
+            allConnected = false;
+            break;
+        }
+    }
+    SDL_SetRenderDrawColor(renderer, allConnected ? 0 : 255, allConnected ? 200 : 0, 0, 255);
+    SDL_Rect statusDot = {SCREEN_WIDTH - 30, 10, 20, 20};
+    SDL_RenderFillRect(renderer, &statusDot);
 
-    // Position display
-    drawValueBox(renderer, 50, 80, "X Position (mm)", state->total_x, 340, 140);
-    drawValueBox(renderer, 410, 80, "Y Position (mm)", state->total_y, 340, 140);
-
-    // Section angles
-    drawValueBox(renderer, 50, 250, "Section A", state->section_a_angle, 220, 100);
-    drawValueBox(renderer, 290, 250, "Section B", state->section_b_angle, 220, 100);
-
-    configBtn.draw(renderer);
+    // Bottom buttons
     calibrateBtn.draw(renderer);
     sensorSetupBtn.draw(renderer);
     sensorRawBtn.draw(renderer);

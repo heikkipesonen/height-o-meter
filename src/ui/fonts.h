@@ -13,6 +13,7 @@ constexpr Color ACCENT_COLOR = {80, 140, 200, 255};
 constexpr Color BTN_COLOR = {60, 60, 80, 255};
 
 // Font access
+TTF_Font* getFontHuge();
 TTF_Font* getFontLarge();
 TTF_Font* getFontMedium();
 TTF_Font* getFontSmall();

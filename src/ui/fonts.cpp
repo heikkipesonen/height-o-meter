@@ -3,11 +3,13 @@
 #include <cstring>
 
 namespace {
+    TTF_Font *fontHuge = nullptr;
     TTF_Font *fontLarge = nullptr;
     TTF_Font *fontMedium = nullptr;
     TTF_Font *fontSmall = nullptr;
 }
 
+TTF_Font* getFontHuge() { return fontHuge; }
 TTF_Font* getFontLarge() { return fontLarge; }
 TTF_Font* getFontMedium() { return fontMedium; }
 TTF_Font* getFontSmall() { return fontSmall; }
@@ -42,14 +44,16 @@ bool initFonts() {
         return false;
     }
 
+    fontHuge = TTF_OpenFont(foundPath, 120);
     fontLarge = TTF_OpenFont(foundPath, 48);
     fontMedium = TTF_OpenFont(foundPath, 28);
     fontSmall = TTF_OpenFont(foundPath, 18);
 
-    return fontLarge && fontMedium && fontSmall;
+    return fontHuge && fontLarge && fontMedium && fontSmall;
 }
 
 void closeFonts() {
+    if (fontHuge) TTF_CloseFont(fontHuge);
     if (fontLarge) TTF_CloseFont(fontLarge);
     if (fontMedium) TTF_CloseFont(fontMedium);
     if (fontSmall) TTF_CloseFont(fontSmall);
