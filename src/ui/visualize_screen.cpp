@@ -25,8 +25,8 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     
     float scale = 0.7f;
     
-    // Pivot point centered horizontally
-    int pivotX = SCREEN_WIDTH / 2 - 100;
+    // Pivot point near left edge
+    int pivotX = 40;
     int pivotY = groundY;
     
     // Draw ground line

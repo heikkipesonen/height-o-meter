@@ -10,8 +10,8 @@ ExcavatorConfig getConfig() {
   config.base_height_mm = 30;
 
   // Center pivot to main boom pin
-  config.pivot_offset_x_mm = 90;   // Horizontal distance
-  config.pivot_offset_y_mm = 41;   // Vertical distance (boom pin is higher)
+  config.pivot_offset_x_mm = 90; // Horizontal distance
+  config.pivot_offset_y_mm = 41; // Vertical distance (boom pin is higher)
 
   // Sensor 0: Superstructure (cab rotation)
   config.sensors[0].id = 1;
@@ -41,7 +41,7 @@ ExcavatorConfig getConfig() {
   config.sensors[3].name = "Stick";
   config.sensors[3].axis = MountAxis::X;
   config.sensors[3].inverted = false;
-  config.sensors[3].offset = 90.0;
+  config.sensors[3].offset = 90.0 - 10.3;
   config.sensors[3].points_down = false;
   config.sensors[3].length_mm = 250;
 

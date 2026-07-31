@@ -11,7 +11,7 @@
 ## Deploy
 
 ```bash
-rsync -av --exclude 'build/' --exclude '.git/' ~/Documents/height-o-meter/src/ rpi@192.168.4.200:~/height-o-meter/src/ && ssh rpi@192.168.4.200 "cd ~/height-o-meter/build && make -j4 && sudo systemctl restart heightmatic"
+rsync -av --checksum --exclude 'build/' --exclude '.git/' ~/Documents/height-o-meter/src/ rpi@192.168.4.200:~/height-o-meter/src/ && ssh rpi@192.168.4.200 "cd ~/height-o-meter/build && make -j4 && sudo systemctl restart heightmatic"
 ```
 
 To sync CMakeLists.txt as well:
