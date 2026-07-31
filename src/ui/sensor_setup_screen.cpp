@@ -33,8 +33,8 @@ namespace {
 
     int setupCurrentId = 1;
     int setupNewId = 1;
-    double setupSensorRoll = 0;
-    double setupSensorPitch = 0;
+    double setupSensorX = 0;
+    double setupSensorY = 0;
     bool setupSensorConnected = false;
     const char *setupStatus = "";
 }
@@ -55,10 +55,10 @@ ScreenResult handleSensorSetupInput(int tx, int ty, ExcavatorState *state) {
         setupCurrentId = (setupCurrentId < 237) ? setupCurrentId + 10 : 247;
         return {Screen::SENSOR_SETUP, true};
     } else if (readBtn.contains(tx, ty)) {
-        double roll, pitch;
-        if (probe_sensor(state, setupCurrentId, &roll, &pitch)) {
-            setupSensorRoll = roll;
-            setupSensorPitch = pitch;
+        double x, y;
+        if (probe_sensor(state, setupCurrentId, &x, &y)) {
+            setupSensorX = x;
+            setupSensorY = y;
             setupSensorConnected = true;
         } else {
             setupSensorConnected = false;
@@ -125,7 +125,7 @@ void renderSensorSetupScreen(SDL_Renderer *renderer) {
     if (getFontSmall()) {
         char buf[64];
         if (setupSensorConnected) {
-            snprintf(buf, sizeof(buf), "X:%.1f Y:%.1f", setupSensorRoll, setupSensorPitch);
+            snprintf(buf, sizeof(buf), "X:%.1f Y:%.1f", setupSensorX, setupSensorY);
             Color green = {0, 255, 0, 255};
             drawText(renderer, getFontSmall(), RIGHT_HALF_X, ROW2_Y + 15, buf, green);
         } else {

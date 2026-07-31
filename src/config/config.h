@@ -2,8 +2,8 @@
 
 // Sensor mounting orientation
 enum class MountAxis {
-    X,  // Use X axis (roll)
-    Y   // Use Y axis (pitch)
+    X,  // Use X axis
+    Y   // Use Y axis
 };
 
 struct SensorConfig {

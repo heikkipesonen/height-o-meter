@@ -17,10 +17,10 @@ enum SensorIndex {
 
 struct Sensor {
     int id = 0;                  // Modbus address
-    double roll = 0;             // X axis (degrees)
-    double pitch = 0;            // Y axis (degrees)
-    double roll_offset = 0;      // Calibration offset
-    double pitch_offset = 0;     // Calibration offset
+    double x = 0;                // X axis angle (degrees)
+    double y = 0;                // Y axis angle (degrees)
+    double x_offset = 0;         // Calibration offset
+    double y_offset = 0;         // Calibration offset
     bool connected = false;      // Last read succeeded
 };
 
@@ -42,8 +42,8 @@ struct ExcavatorState {
 // Returns 0 on success, -1 on failure.
 int update_sensor_id(ExcavatorState *state, int current_id, int new_id);
 
-// Probe a sensor by ID. Returns true if responds, fills roll/pitch.
-bool probe_sensor(ExcavatorState *state, int id, double *roll, double *pitch);
+// Probe a sensor by ID. Returns true if responds, fills x/y angles.
+bool probe_sensor(ExcavatorState *state, int id, double *x, double *y);
 
 // Modbus thread entry point
 void excavator_thread(ExcavatorState *state, const ExcavatorConfig *config);

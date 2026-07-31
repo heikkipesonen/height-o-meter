@@ -48,11 +48,11 @@ SensorData read_angle(modbus_t *ctx) {
         return data;
     }
 
-    int16_t roll_raw = static_cast<int16_t>(tab_reg[0]);
-    int16_t pitch_raw = static_cast<int16_t>(tab_reg[1]);
+    int16_t x_raw = static_cast<int16_t>(tab_reg[0]);
+    int16_t y_raw = static_cast<int16_t>(tab_reg[1]);
 
-    data.x = (roll_raw / 32768.0) * 180.0;
-    data.y = (pitch_raw / 32768.0) * 180.0;
+    data.x = (x_raw / 32768.0) * 180.0;
+    data.y = (y_raw / 32768.0) * 180.0;
     data.valid = true;
 
     return data;
@@ -66,8 +66,8 @@ bool read_sensor(modbus_t *ctx, Sensor *sensor) {
     
     SensorData data = read_angle(ctx);
     if (data.valid) {
-        sensor->roll = data.x - sensor->roll_offset;
-        sensor->pitch = data.y - sensor->pitch_offset;
+        sensor->x = data.x - sensor->x_offset;
+        sensor->y = data.y - sensor->y_offset;
         sensor->connected = true;
         return true;
     }
@@ -145,7 +145,7 @@ void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
     // Bucket sideways tilt - lowest corner is half_width * sin(tilt) below center
     const Sensor &tilt_sensor = state->sensors[SENSOR_CURL_TILT];
     if (tilt_sensor.connected) {
-        double tilt_deg = tilt_sensor.pitch;  // Y axis is sideways tilt
+        double tilt_deg = tilt_sensor.y;  // Y axis is sideways tilt
         double tilt_rad = toRadians(std::abs(tilt_deg));
         double bucket_half_width = 35.0;  // 70mm / 2
         y -= bucket_half_width * std::sin(tilt_rad);
@@ -159,7 +159,7 @@ void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
 
 // Get the angle to use from sensor based on config
 double getSensorAngle(const Sensor &sensor, const SensorConfig &cfg) {
-    double angle = (cfg.axis == MountAxis::X) ? sensor.roll : sensor.pitch;
+    double angle = (cfg.axis == MountAxis::X) ? sensor.x : sensor.y;
     angle = cfg.offset - angle;
     if (cfg.inverted) angle = -angle;
     return angle;
@@ -243,7 +243,7 @@ void excavator_thread(ExcavatorState *state, const ExcavatorConfig *config) {
     cleanup(ctx);
 }
 
-bool probe_sensor(ExcavatorState *state, int id, double *roll, double *pitch) {
+bool probe_sensor(ExcavatorState *state, int id, double *x, double *y) {
     // Pause the polling thread and wait for it to release the port
     state->paused = true;
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
@@ -268,8 +268,8 @@ bool probe_sensor(ExcavatorState *state, int id, double *roll, double *pitch) {
     state->paused = false;
     
     if (data.valid) {
-        *roll = data.x;
-        *pitch = data.y;
+        *x = data.x;
+        *y = data.y;
         return true;
     }
     return false;

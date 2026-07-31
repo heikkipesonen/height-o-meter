@@ -95,7 +95,7 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
             
             // Line 2: Raw X, Y values
             if (sensor.connected) {
-                snprintf(buf, sizeof(buf), "X: %.1f   Y: %.1f", sensor.roll, sensor.pitch);
+                snprintf(buf, sizeof(buf), "X: %.1f   Y: %.1f", sensor.x, sensor.y);
             } else {
                 snprintf(buf, sizeof(buf), "X: --   Y: --");
             }

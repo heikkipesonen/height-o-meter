@@ -154,7 +154,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         drawTextCentered(renderer, getFontSmall(), 0, textY + 25, SCREEN_WIDTH, 25, buf);
         
         // Show sideways tilt from Y axis
-        snprintf(buf, sizeof(buf), "Tilt: %.1f", sT.pitch);
+        snprintf(buf, sizeof(buf), "Tilt: %.1f", sT.y);
         drawTextCentered(renderer, getFontSmall(), 0, textY + 50, SCREEN_WIDTH/2, 25, buf);
         
         snprintf(buf, sizeof(buf), "D: %d  R: %d", (int)state->depth, (int)state->reach);

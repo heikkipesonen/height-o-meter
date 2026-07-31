@@ -205,7 +205,7 @@ void renderSensorEditScreen(SDL_Renderer *renderer, ExcavatorState *state, Excav
         char buf[128];
         double angle = getSensorAngle(sensor, cfg);
         if (sensor.connected) {
-            snprintf(buf, sizeof(buf), "Raw X:%.1f Y:%.1f -> %.1f", sensor.roll, sensor.pitch, angle);
+            snprintf(buf, sizeof(buf), "Raw X:%.1f Y:%.1f -> %.1f", sensor.x, sensor.y, angle);
         } else {
             snprintf(buf, sizeof(buf), "Not connected");
         }
