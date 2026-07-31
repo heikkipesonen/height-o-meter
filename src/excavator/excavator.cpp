@@ -107,27 +107,32 @@ double getSensorAngle(const Sensor &sensor, const SensorConfig &cfg) {
 }
 
 // Calculate position from all arm segments
+// Sensors read absolute angle from vertical (0° = straight up/down depending on mount)
+// Positive angle = tilted away from cab
 void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
     // Start at boom pin position
     double x = config->pivot_offset_x_mm;
     double y = config->base_height_mm + config->pivot_offset_y_mm;
     
-    // Cumulative angle (each segment rotates relative to previous)
-    double cumulative_angle = 0;
-    
-    // Add each arm segment (skip superstructure[0] and test[5])
+    // Each sensor reads absolute angle from vertical (gravity-referenced)
     for (int i = SENSOR_BOOM_A; i <= SENSOR_TILT; i++) {
         const Sensor &sensor = state->sensors[i];
         const SensorConfig &cfg = config->sensors[i];
         
         if (!sensor.connected || cfg.length_mm == 0) continue;
         
-        double segment_angle = getSensorAngle(sensor, cfg);
-        cumulative_angle += segment_angle;
+        double angle_deg = getSensorAngle(sensor, cfg);
+        double rad = toRadians(angle_deg);
         
-        double rad = toRadians(cumulative_angle);
-        x += std::cos(rad) * cfg.length_mm;
-        y += std::sin(rad) * cfg.length_mm;
+        // Horizontal: always sin(angle) * length
+        x += std::sin(rad) * cfg.length_mm;
+        
+        // Vertical: cos(angle) * length, but subtract if segment points down at 0°
+        if (cfg.points_down) {
+            y -= std::cos(rad) * cfg.length_mm;
+        } else {
+            y += std::cos(rad) * cfg.length_mm;
+        }
     }
     
     state->reach = x;

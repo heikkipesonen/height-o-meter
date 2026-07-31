@@ -5,17 +5,22 @@
 #include <cstdio>
 
 namespace {
-    Button backBtn{{50, 400, 150, 60}, "Back"};
-    Button currentIdMinus{{150, 100, 60, 60}, "-"};
-    Button currentIdMinus10{{220, 100, 60, 60}, "-10"};
-    Button currentIdPlus10{{420, 100, 60, 60}, "+10"};
-    Button currentIdPlus{{490, 100, 60, 60}, "+"};
-    Button readBtn{{560, 100, 100, 60}, "Read"};
-    Button newIdMinus{{150, 200, 60, 60}, "-"};
-    Button newIdMinus10{{220, 200, 60, 60}, "-10"};
-    Button newIdPlus10{{420, 200, 60, 60}, "+10"};
-    Button newIdPlus{{490, 200, 60, 60}, "+"};
-    Button assignBtn{{SCREEN_WIDTH/2 - 100, 320, 200, 60}, "Assign ID"};
+    Button backBtn{{20, 720, 210, 60}, "Back"};
+    
+    // Current ID row
+    Button currentIdMinus{{20, 120, 60, 60}, "-"};
+    Button currentIdMinus10{{90, 120, 80, 60}, "-10"};
+    Button currentIdPlus10{{310, 120, 80, 60}, "+10"};
+    Button currentIdPlus{{400, 120, 60, 60}, "+"};
+    
+    // New ID row
+    Button newIdMinus{{20, 280, 60, 60}, "-"};
+    Button newIdMinus10{{90, 280, 80, 60}, "-10"};
+    Button newIdPlus10{{310, 280, 80, 60}, "+10"};
+    Button newIdPlus{{400, 280, 60, 60}, "+"};
+    
+    Button readBtn{{20, 200, 200, 50}, "Read"};
+    Button assignBtn{{20, 380, SCREEN_WIDTH - 40, 60}, "Assign ID"};
 
     int setupCurrentId = 1;
     int setupNewId = 1;
@@ -83,13 +88,15 @@ void renderSensorSetupScreen(SDL_Renderer *renderer) {
         drawTextCentered(renderer, getFontMedium(), 0, 0, SCREEN_WIDTH, 50, "SENSOR SETUP", ACCENT_COLOR);
     }
 
+    // Current ID section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 50, 115, "Current ID:");
+        drawText(renderer, getFontSmall(), 20, 70, "Current ID:");
     }
+    
     currentIdMinus.draw(renderer);
     currentIdMinus10.draw(renderer);
     
-    SDL_Rect currentIdBox = {290, 100, 120, 60};
+    SDL_Rect currentIdBox = {180, 120, 120, 60};
     SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
     SDL_RenderFillRect(renderer, &currentIdBox);
     SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
@@ -97,32 +104,36 @@ void renderSensorSetupScreen(SDL_Renderer *renderer) {
     if (getFontLarge()) {
         char buf[8];
         snprintf(buf, sizeof(buf), "%d", setupCurrentId);
-        drawTextCentered(renderer, getFontLarge(), 290, 100, 120, 60, buf);
+        drawTextCentered(renderer, getFontLarge(), 180, 120, 120, 60, buf);
     }
     
     currentIdPlus10.draw(renderer);
     currentIdPlus.draw(renderer);
+    
     readBtn.draw(renderer);
 
+    // Sensor status
     if (getFontSmall()) {
         char buf[64];
         if (setupSensorConnected) {
             snprintf(buf, sizeof(buf), "Roll: %.1f  Pitch: %.1f", setupSensorRoll, setupSensorPitch);
             Color green = {0, 255, 0, 255};
-            drawTextCentered(renderer, getFontSmall(), 670, 100, 120, 60, buf, green);
+            drawText(renderer, getFontSmall(), 240, 215, buf, green);
         } else {
             Color red = {255, 100, 100, 255};
-            drawTextCentered(renderer, getFontSmall(), 670, 100, 120, 60, "NC", red);
+            drawText(renderer, getFontSmall(), 240, 215, "Not connected", red);
         }
     }
 
+    // New ID section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 50, 215, "New ID:");
+        drawText(renderer, getFontSmall(), 20, 260, "New ID:");
     }
+    
     newIdMinus.draw(renderer);
     newIdMinus10.draw(renderer);
     
-    SDL_Rect newIdBox = {290, 200, 120, 60};
+    SDL_Rect newIdBox = {180, 280, 120, 60};
     SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
     SDL_RenderFillRect(renderer, &newIdBox);
     SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
@@ -130,7 +141,7 @@ void renderSensorSetupScreen(SDL_Renderer *renderer) {
     if (getFontLarge()) {
         char buf[8];
         snprintf(buf, sizeof(buf), "%d", setupNewId);
-        drawTextCentered(renderer, getFontLarge(), 290, 200, 120, 60, buf);
+        drawTextCentered(renderer, getFontLarge(), 180, 280, 120, 60, buf);
     }
     
     newIdPlus10.draw(renderer);
@@ -138,8 +149,9 @@ void renderSensorSetupScreen(SDL_Renderer *renderer) {
 
     assignBtn.draw(renderer);
 
+    // Status message
     if (getFontSmall()) {
-        drawTextCentered(renderer, getFontSmall(), 0, 390, SCREEN_WIDTH, 30, setupStatus);
+        drawTextCentered(renderer, getFontSmall(), 0, 460, SCREEN_WIDTH, 30, setupStatus);
     }
 
     backBtn.draw(renderer);

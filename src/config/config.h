@@ -10,7 +10,8 @@ struct SensorConfig {
     int id = 0;                     // Modbus address
     const char* name = "";          // Display name
     MountAxis axis = MountAxis::Y;  // Which axis to use
-    bool inverted = false;          // Flip sign
+    bool inverted = false;          // Flip angle sign
+    bool points_down = false;       // True if 0° means pointing down
     int length_mm = 0;              // Arm segment length in mm
 };
 

@@ -5,8 +5,8 @@
 #include <cstdio>
 
 namespace {
-    Button backBtn{{50, 400, 150, 60}, "Back"};
-    Button zeroBtn{{SCREEN_WIDTH/2 - 75, 400, 150, 60}, "Zero"};
+    Button backBtn{{20, 720, 210, 60}, "Back"};
+    Button zeroBtn{{250, 720, 210, 60}, "Zero"};
 }
 
 ScreenResult handleCalibrateInput(int tx, int ty, ExcavatorState *state) {
@@ -45,11 +45,12 @@ void renderCalibrateScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     }
 
     if (getFontSmall()) {
-        drawTextCentered(renderer, getFontSmall(), 0, 70, SCREEN_WIDTH, 30, "Position boom horizontally and press Zero");
+        drawTextCentered(renderer, getFontSmall(), 0, 70, SCREEN_WIDTH, 30, "Position boom horizontally");
+        drawTextCentered(renderer, getFontSmall(), 0, 95, SCREEN_WIDTH, 30, "and press Zero");
     }
 
-    drawValueBox(renderer, SCREEN_WIDTH/2 - 160, 120, "Reach", state->reach, 320, 110);
-    drawValueBox(renderer, SCREEN_WIDTH/2 - 160, 250, "Depth", state->depth, 320, 110);
+    drawValueBox(renderer, 20, 150, "Reach", state->reach, SCREEN_WIDTH - 40, 130);
+    drawValueBox(renderer, 20, 310, "Depth", state->depth, SCREEN_WIDTH - 40, 130);
 
     backBtn.draw(renderer);
     zeroBtn.draw(renderer);
