@@ -8,19 +8,19 @@ namespace {
     Button backBtn{{20, 720, 210, 60}, "Back"};
     
     // Current ID row
-    Button currentIdMinus{{20, 120, 60, 60}, "-"};
-    Button currentIdMinus10{{90, 120, 80, 60}, "-10"};
-    Button currentIdPlus10{{310, 120, 80, 60}, "+10"};
-    Button currentIdPlus{{400, 120, 60, 60}, "+"};
+    Button currentIdMinus{{20, 70, 60, 60}, "-"};
+    Button currentIdMinus10{{90, 70, 80, 60}, "-10"};
+    Button currentIdPlus10{{310, 70, 80, 60}, "+10"};
+    Button currentIdPlus{{400, 70, 60, 60}, "+"};
     
     // New ID row
-    Button newIdMinus{{20, 280, 60, 60}, "-"};
-    Button newIdMinus10{{90, 280, 80, 60}, "-10"};
-    Button newIdPlus10{{310, 280, 80, 60}, "+10"};
-    Button newIdPlus{{400, 280, 60, 60}, "+"};
+    Button newIdMinus{{20, 230, 60, 60}, "-"};
+    Button newIdMinus10{{90, 230, 80, 60}, "-10"};
+    Button newIdPlus10{{310, 230, 80, 60}, "+10"};
+    Button newIdPlus{{400, 230, 60, 60}, "+"};
     
-    Button readBtn{{20, 200, 200, 50}, "Read"};
-    Button assignBtn{{20, 380, SCREEN_WIDTH - 40, 60}, "Assign ID"};
+    Button readBtn{{20, 150, 200, 50}, "Read"};
+    Button assignBtn{{20, 330, SCREEN_WIDTH - 40, 60}, "Assign ID"};
 
     int setupCurrentId = 1;
     int setupNewId = 1;
@@ -81,22 +81,15 @@ ScreenResult handleSensorSetupInput(int tx, int ty, ExcavatorState *state) {
 }
 
 void renderSensorSetupScreen(SDL_Renderer *renderer) {
-    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
-    SDL_SetRenderDrawColor(renderer, 50, 50, 40, 255);
-    SDL_RenderFillRect(renderer, &titleBar);
-    if (getFontMedium()) {
-        drawTextCentered(renderer, getFontMedium(), 0, 0, SCREEN_WIDTH, 50, "SENSOR SETUP", ACCENT_COLOR);
-    }
-
     // Current ID section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 70, "Current ID:");
+        drawText(renderer, getFontSmall(), 20, 20, "Current ID:");
     }
     
     currentIdMinus.draw(renderer);
     currentIdMinus10.draw(renderer);
     
-    SDL_Rect currentIdBox = {180, 120, 120, 60};
+    SDL_Rect currentIdBox = {180, 70, 120, 60};
     SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
     SDL_RenderFillRect(renderer, &currentIdBox);
     SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
@@ -104,7 +97,7 @@ void renderSensorSetupScreen(SDL_Renderer *renderer) {
     if (getFontLarge()) {
         char buf[8];
         snprintf(buf, sizeof(buf), "%d", setupCurrentId);
-        drawTextCentered(renderer, getFontLarge(), 180, 120, 120, 60, buf);
+        drawTextCentered(renderer, getFontLarge(), 180, 70, 120, 60, buf);
     }
     
     currentIdPlus10.draw(renderer);
@@ -118,22 +111,22 @@ void renderSensorSetupScreen(SDL_Renderer *renderer) {
         if (setupSensorConnected) {
             snprintf(buf, sizeof(buf), "Roll: %.1f  Pitch: %.1f", setupSensorRoll, setupSensorPitch);
             Color green = {0, 255, 0, 255};
-            drawText(renderer, getFontSmall(), 240, 215, buf, green);
+            drawText(renderer, getFontSmall(), 240, 165, buf, green);
         } else {
             Color red = {255, 100, 100, 255};
-            drawText(renderer, getFontSmall(), 240, 215, "Not connected", red);
+            drawText(renderer, getFontSmall(), 240, 165, "Not connected", red);
         }
     }
 
     // New ID section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 260, "New ID:");
+        drawText(renderer, getFontSmall(), 20, 210, "New ID:");
     }
     
     newIdMinus.draw(renderer);
     newIdMinus10.draw(renderer);
     
-    SDL_Rect newIdBox = {180, 280, 120, 60};
+    SDL_Rect newIdBox = {180, 230, 120, 60};
     SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
     SDL_RenderFillRect(renderer, &newIdBox);
     SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
@@ -141,7 +134,7 @@ void renderSensorSetupScreen(SDL_Renderer *renderer) {
     if (getFontLarge()) {
         char buf[8];
         snprintf(buf, sizeof(buf), "%d", setupNewId);
-        drawTextCentered(renderer, getFontLarge(), 180, 280, 120, 60, buf);
+        drawTextCentered(renderer, getFontLarge(), 180, 230, 120, 60, buf);
     }
     
     newIdPlus10.draw(renderer);

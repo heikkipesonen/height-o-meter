@@ -18,25 +18,15 @@ ScreenResult handleVisualizeInput(int tx, int ty) {
 }
 
 void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const ExcavatorConfig *config) {
-    // Title
-    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
-    SDL_SetRenderDrawColor(renderer, 40, 40, 50, 255);
-    SDL_RenderFillRect(renderer, &titleBar);
-    if (getFontMedium()) {
-        drawTextCentered(renderer, getFontMedium(), 0, 0, SCREEN_WIDTH, 50, "ARM POSITION", ACCENT_COLOR);
-    }
+    // Drawing area - full screen without title
+    int drawAreaY = 10;
+    int drawAreaH = 550;
+    int groundY = drawAreaY + drawAreaH - 50;
     
-    // Drawing area
-    int drawAreaY = 60;
-    int drawAreaH = 600;
-    int groundY = drawAreaY + drawAreaH - 50;  // Ground line near bottom
+    float scale = 0.7f;
     
-    // Scale: fit the arm in the drawing area
-    // Max reach ~700mm, max height ~700mm for this model
-    float scale = 0.7f;  // pixels per mm
-    
-    // Pivot point on screen (left side, at ground level)
-    int pivotX = 80;
+    // Pivot point centered horizontally
+    int pivotX = SCREEN_WIDTH / 2 - 100;
     int pivotY = groundY;
     
     // Draw ground line
@@ -63,22 +53,19 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         {100, 200, 255, 255}, // 4: tilt/bucket - blue
     };
     
-    // Draw each segment - same logic as calculatePosition
+    // Draw each segment
     for (int i = SENSOR_BOOM_A; i <= SENSOR_TILT; i++) {
         const Sensor &sensor = state->sensors[i];
         const SensorConfig &cfg = config->sensors[i];
         
         if (!sensor.connected || cfg.length_mm == 0) continue;
         
-        // Get angle (same logic as position calculation)
         double angle_deg = (cfg.axis == MountAxis::X) ? sensor.roll : sensor.pitch;
         if (cfg.inverted) angle_deg = -angle_deg;
         double rad = toRadians(angle_deg);
         
-        // Horizontal: always sin(angle) * length
         x += std::sin(rad) * cfg.length_mm;
         
-        // Vertical: cos(angle) * length, but subtract if segment points down at 0°
         if (cfg.points_down) {
             y -= std::cos(rad) * cfg.length_mm;
         } else {
@@ -88,10 +75,8 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         int screenX = pivotX + (int)(x * scale);
         int screenY = pivotY - (int)(y * scale);
         
-        // Draw segment
         SDL_SetRenderDrawColor(renderer, colors[i].r, colors[i].g, colors[i].b, 255);
         SDL_RenderDrawLine(renderer, prevScreenX, prevScreenY, screenX, screenY);
-        // Draw thicker
         SDL_RenderDrawLine(renderer, prevScreenX+1, prevScreenY, screenX+1, screenY);
         SDL_RenderDrawLine(renderer, prevScreenX, prevScreenY+1, screenX, screenY+1);
         
@@ -99,16 +84,35 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         prevScreenY = screenY;
     }
     
-    // Draw bucket tip marker
+    // Bucket tip marker
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
     SDL_Rect tip = {prevScreenX - 4, prevScreenY - 4, 8, 8};
     SDL_RenderFillRect(renderer, &tip);
     
-    // Show depth/reach values
+    // Debug info below visualization
     if (getFontSmall()) {
         char buf[64];
-        snprintf(buf, sizeof(buf), "Depth: %d  Reach: %d", (int)state->depth, (int)state->reach);
-        drawTextCentered(renderer, getFontSmall(), 0, drawAreaY + drawAreaH + 10, SCREEN_WIDTH, 30, buf);
+        const Sensor &sA = state->sensors[SENSOR_BOOM_A];
+        const Sensor &sB = state->sensors[SENSOR_BOOM_B];
+        const Sensor &sS = state->sensors[SENSOR_STICK];
+        const Sensor &sT = state->sensors[SENSOR_TILT];
+        
+        int textY = drawAreaY + drawAreaH + 20;
+        
+        snprintf(buf, sizeof(buf), "A: X=%.1f Y=%.1f", sA.roll, sA.pitch);
+        drawTextCentered(renderer, getFontSmall(), 0, textY, SCREEN_WIDTH/2, 25, buf);
+        
+        snprintf(buf, sizeof(buf), "B: X=%.1f Y=%.1f", sB.roll, sB.pitch);
+        drawTextCentered(renderer, getFontSmall(), SCREEN_WIDTH/2, textY, SCREEN_WIDTH/2, 25, buf);
+        
+        snprintf(buf, sizeof(buf), "Stick: X=%.1f Y=%.1f", sS.roll, sS.pitch);
+        drawTextCentered(renderer, getFontSmall(), 0, textY + 25, SCREEN_WIDTH/2, 25, buf);
+        
+        snprintf(buf, sizeof(buf), "Tilt: X=%.1f Y=%.1f", sT.roll, sT.pitch);
+        drawTextCentered(renderer, getFontSmall(), SCREEN_WIDTH/2, textY + 25, SCREEN_WIDTH/2, 25, buf);
+        
+        snprintf(buf, sizeof(buf), "Depth: %d   Reach: %d", (int)state->depth, (int)state->reach);
+        drawTextCentered(renderer, getFontSmall(), 0, textY + 55, SCREEN_WIDTH, 25, buf);
     }
     
     backBtn.draw(renderer);

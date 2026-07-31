@@ -7,12 +7,14 @@ namespace {
     TTF_Font *fontLarge = nullptr;
     TTF_Font *fontMedium = nullptr;
     TTF_Font *fontSmall = nullptr;
+    TTF_Font *fontButton = nullptr;
 }
 
 TTF_Font* getFontHuge() { return fontHuge; }
 TTF_Font* getFontLarge() { return fontLarge; }
 TTF_Font* getFontMedium() { return fontMedium; }
 TTF_Font* getFontSmall() { return fontSmall; }
+TTF_Font* getFontButton() { return fontButton; }
 
 bool initFonts() {
     if (TTF_Init() < 0) {
@@ -26,6 +28,15 @@ bool initFonts() {
         "/usr/share/fonts/dejavu-sans-fonts/DejaVuSans.ttf", // Fedora
         "/usr/share/fonts/TTF/Roboto-Regular.ttf",
         "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
+        nullptr
+    };
+
+    const char *boldFontPaths[] = {
+        "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf",              // Arch
+        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",  // Debian
+        "/usr/share/fonts/dejavu-sans-fonts/DejaVuSans-Bold.ttf", // Fedora
+        "/usr/share/fonts/TTF/Roboto-Bold.ttf",
+        "/usr/share/fonts/truetype/freefont/FreeSansBold.ttf",
         nullptr
     };
 
@@ -44,12 +55,23 @@ bool initFonts() {
         return false;
     }
 
+    const char *foundBoldPath = nullptr;
+    for (int i = 0; boldFontPaths[i] != nullptr; i++) {
+        FILE *f = fopen(boldFontPaths[i], "r");
+        if (f) {
+            fclose(f);
+            foundBoldPath = boldFontPaths[i];
+            break;
+        }
+    }
+
     fontHuge = TTF_OpenFont(foundPath, 120);
     fontLarge = TTF_OpenFont(foundPath, 48);
     fontMedium = TTF_OpenFont(foundPath, 28);
     fontSmall = TTF_OpenFont(foundPath, 18);
+    fontButton = TTF_OpenFont(foundBoldPath ? foundBoldPath : foundPath, 28);
 
-    return fontHuge && fontLarge && fontMedium && fontSmall;
+    return fontHuge && fontLarge && fontMedium && fontSmall && fontButton;
 }
 
 void closeFonts() {
@@ -57,6 +79,7 @@ void closeFonts() {
     if (fontLarge) TTF_CloseFont(fontLarge);
     if (fontMedium) TTF_CloseFont(fontMedium);
     if (fontSmall) TTF_CloseFont(fontSmall);
+    if (fontButton) TTF_CloseFont(fontButton);
     TTF_Quit();
 }
 

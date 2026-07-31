@@ -15,6 +15,13 @@ struct SensorConfig {
     int length_mm = 0;              // Arm segment length in mm
 };
 
+struct BucketConfig {
+    const char* name = "";          // Bucket name
+    int coupler_length_mm = 0;      // Stick end to tilt pin
+    int bucket_length_mm = 0;       // Tilt pin to bucket edge
+    int bucket_width_mm = 0;        // Bucket width for tilt calc
+};
+
 struct ExcavatorConfig {
     const char* serial_port = "/dev/ttyUSB0";
     int baud_rate = 9600;
@@ -27,6 +34,7 @@ struct ExcavatorConfig {
     int pivot_offset_y_mm = 0;      // Vertical distance (positive = up)
     
     SensorConfig sensors[6];
+    BucketConfig bucket;
 };
 
 // Returns the config - edit config.cpp to change values

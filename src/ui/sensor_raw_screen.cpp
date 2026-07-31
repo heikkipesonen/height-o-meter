@@ -16,13 +16,6 @@ ScreenResult handleSensorRawInput(int tx, int ty) {
 }
 
 void renderSensorRawScreen(SDL_Renderer *renderer, ExcavatorState *state) {
-    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
-    SDL_SetRenderDrawColor(renderer, 40, 50, 50, 255);
-    SDL_RenderFillRect(renderer, &titleBar);
-    if (getFontMedium()) {
-        drawTextCentered(renderer, getFontMedium(), 0, 0, SCREEN_WIDTH, 50, "RAW SENSOR DATA", ACCENT_COLOR);
-    }
-
     const char *sensorNames[] = {
         "Superstructure",
         "Boom A",

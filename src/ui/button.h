@@ -17,8 +17,8 @@ struct Button {
         SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, BTN_COLOR.a);
         SDL_RenderFillRect(renderer, &rect);
 
-        if (getFontMedium()) {
-            drawTextCentered(renderer, getFontMedium(), rect.x, rect.y, rect.w, rect.h, label);
+        if (getFontButton()) {
+            drawTextCentered(renderer, getFontButton(), rect.x, rect.y, rect.w, rect.h, label, {255, 255, 255, 255});
         }
     }
 };

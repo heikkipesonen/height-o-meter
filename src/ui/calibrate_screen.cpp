@@ -37,20 +37,13 @@ void drawValueBox(SDL_Renderer *renderer, int x, int y, const char *label, doubl
 }
 
 void renderCalibrateScreen(SDL_Renderer *renderer, ExcavatorState *state) {
-    SDL_Rect titleBar = {0, 0, SCREEN_WIDTH, 50};
-    SDL_SetRenderDrawColor(renderer, 40, 50, 40, 255);
-    SDL_RenderFillRect(renderer, &titleBar);
-    if (getFontMedium()) {
-        drawTextCentered(renderer, getFontMedium(), 0, 0, SCREEN_WIDTH, 50, "CALIBRATE", ACCENT_COLOR);
-    }
-
     if (getFontSmall()) {
-        drawTextCentered(renderer, getFontSmall(), 0, 70, SCREEN_WIDTH, 30, "Position boom horizontally");
-        drawTextCentered(renderer, getFontSmall(), 0, 95, SCREEN_WIDTH, 30, "and press Zero");
+        drawTextCentered(renderer, getFontSmall(), 0, 20, SCREEN_WIDTH, 30, "Position boom horizontally");
+        drawTextCentered(renderer, getFontSmall(), 0, 45, SCREEN_WIDTH, 30, "and press Zero");
     }
 
-    drawValueBox(renderer, 20, 150, "Reach", state->reach, SCREEN_WIDTH - 40, 130);
-    drawValueBox(renderer, 20, 310, "Depth", state->depth, SCREEN_WIDTH - 40, 130);
+    drawValueBox(renderer, 20, 100, "Reach", state->reach, SCREEN_WIDTH - 40, 130);
+    drawValueBox(renderer, 20, 260, "Depth", state->depth, SCREEN_WIDTH - 40, 130);
 
     backBtn.draw(renderer);
     zeroBtn.draw(renderer);

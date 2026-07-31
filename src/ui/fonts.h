@@ -9,6 +9,7 @@ TTF_Font* getFontHuge();
 TTF_Font* getFontLarge();
 TTF_Font* getFontMedium();
 TTF_Font* getFontSmall();
+TTF_Font* getFontButton();
 
 bool initFonts();
 void closeFonts();
