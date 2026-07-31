@@ -58,26 +58,24 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
         }
     }
     
-    // Depth value
+    // Depth value (convert mm to cm)
+    int depthCm = depth / 10;
     char depthStr[32];
-    snprintf(depthStr, sizeof(depthStr), "%d", depth < 0 ? -depth : depth);
+    snprintf(depthStr, sizeof(depthStr), "%d", depthCm < 0 ? -depthCm : depthCm);
     if (getFontHuge()) {
         drawTextCentered(renderer, getFontHuge(), 0, 280, SCREEN_WIDTH, 120, depthStr, {255, 255, 255, 255});
     }
     
     // Divider
     SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
-    SDL_RenderDrawLine(renderer, 40, 420, SCREEN_WIDTH - 40, 420);
+    SDL_RenderDrawLine(renderer, 40, 440, SCREEN_WIDTH - 40, 440);
     
-    // Reach label and value
-    if (getFontSmall()) {
-        drawTextCentered(renderer, getFontSmall(), 0, 440, SCREEN_WIDTH, 30, "REACH", {150, 150, 150, 255});
-    }
-    int reach = (int)state->reach;
+    // Reach value (convert mm to cm)
+    int reachCm = (int)state->reach / 10;
     char reachStr[32];
-    snprintf(reachStr, sizeof(reachStr), "%d", reach);
+    snprintf(reachStr, sizeof(reachStr), "%d", reachCm);
     if (getFontHuge()) {
-        drawTextCentered(renderer, getFontHuge(), 0, 470, SCREEN_WIDTH, 120, reachStr, {255, 255, 255, 255});
+        drawTextCentered(renderer, getFontHuge(), 0, 490, SCREEN_WIDTH, 120, reachStr, {255, 255, 255, 255});
     }
     
     // Status dot
