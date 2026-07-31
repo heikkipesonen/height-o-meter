@@ -104,9 +104,22 @@ int update_device_id(modbus_t *ctx, int newId) {
 // Sensors read absolute angle from vertical (0° = straight up/down depending on mount)
 // Positive angle = tilted away from cab
 void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
-    // Start at boom pin position
-    double x = config->pivot_offset_x_mm;
-    double y = config->base_height_mm + config->pivot_offset_y_mm;
+    // Get superstructure tilt (machine lean)
+    const Sensor &superSensor = state->sensors[SENSOR_SUPERSTRUCTURE];
+    const SensorConfig &superCfg = config->sensors[SENSOR_SUPERSTRUCTURE];
+    double superTilt = 0;
+    if (superSensor.connected) {
+        superTilt = getSensorAngle(superSensor, superCfg);
+    }
+    double superRad = toRadians(superTilt);
+    
+    // Start at boom pin position - rotated by superstructure tilt
+    double baseX = config->pivot_offset_x_mm;
+    double baseY = config->base_height_mm + config->pivot_offset_y_mm;
+    
+    // Rotate base position by superstructure tilt
+    double x = baseX * std::cos(superRad) - baseY * std::sin(superRad);
+    double y = baseX * std::sin(superRad) + baseY * std::cos(superRad);
     
     // Each sensor reads absolute angle from vertical (gravity-referenced)
     for (int i = SENSOR_BOOM_A; i <= SENSOR_TILT; i++) {

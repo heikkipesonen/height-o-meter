@@ -17,7 +17,7 @@ ExcavatorConfig getConfig() {
   config.sensors[0].id = 1;
   config.sensors[0].name = "Superstructure";
   config.sensors[0].axis = MountAxis::Y;
-  config.sensors[0].inverted = false;
+  config.sensors[0].inverted = true;
   config.sensors[0].length_mm = 0;
 
   // Sensor 1: Boom A (main boom)
