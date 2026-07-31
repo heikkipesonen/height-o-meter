@@ -5,9 +5,10 @@
 #include "calibrate_screen.h"
 #include "sensor_setup_screen.h"
 #include "sensor_raw_screen.h"
+#include "visualize_screen.h"
 #include <cstdio>
 
-UI::UI() {}
+UI::UI(const ExcavatorConfig *config) : config(config) {}
 
 UI::~UI() {
     closeFonts();
@@ -94,6 +95,9 @@ void UI::handleInput(ExcavatorState *state) {
                 case Screen::SENSOR_RAW:
                     result = handleSensorRawInput(tx, ty);
                     break;
+                case Screen::VISUALIZE:
+                    result = handleVisualizeInput(tx, ty);
+                    break;
             }
 
             if (result.handled) {
@@ -132,6 +136,9 @@ void UI::render(ExcavatorState *state) {
             break;
         case Screen::SENSOR_RAW:
             renderSensorRawScreen(renderer, state);
+            break;
+        case Screen::VISUALIZE:
+            renderVisualizeScreen(renderer, state, config);
             break;
     }
 

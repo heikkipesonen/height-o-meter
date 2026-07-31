@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     std::thread excavator(excavator_thread, &state, &config);
 
     // Run UI (blocks until quit)
-    UI ui;
+    UI ui(&config);
     if (ui.init()) {
         ui.run(&state);
     }

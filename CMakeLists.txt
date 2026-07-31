@@ -28,6 +28,7 @@ set(UI_SOURCES
     src/ui/calibrate_screen.cpp
     src/ui/sensor_setup_screen.cpp
     src/ui/sensor_raw_screen.cpp
+    src/ui/visualize_screen.cpp
 )
 
 add_executable(heightmatic
