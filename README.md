@@ -48,13 +48,6 @@ sudo systemctl restart heightmatic
 
 If that doesn't work, physically unplug and replug the adapter.
 
-## Deploy
-
-```bash
-rsync -av --exclude 'build/' ~/Documents/height-o-meter/src/ rpi@192.168.4.200:~/height-o-meter/src/
-ssh rpi@192.168.4.200 "cd ~/height-o-meter/build && make -j4 && sudo systemctl restart heightmatic"
-```
-
 ## Systemd service
 
 The app runs as a systemd service on the Pi:
