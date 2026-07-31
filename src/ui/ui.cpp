@@ -2,13 +2,13 @@
 #include "fonts.h"
 #include "colors.h"
 #include "main_screen.h"
-#include "calibrate_screen.h"
 #include "sensor_setup_screen.h"
-#include "sensor_raw_screen.h"
 #include "visualize_screen.h"
+#include "sensor_config_screen.h"
+#include "sensor_edit_screen.h"
 #include <cstdio>
 
-UI::UI(const ExcavatorConfig *config) : config(config) {}
+UI::UI(ExcavatorConfig *config) : config(config) {}
 
 UI::~UI() {
     closeFonts();
@@ -83,20 +83,17 @@ void UI::handleInput(ExcavatorState *state) {
                 case Screen::MAIN:
                     result = handleMainInput(tx, ty, state);
                     break;
-                case Screen::CONFIG:
-                    // No config screen handler yet
-                    break;
-                case Screen::CALIBRATE:
-                    result = handleCalibrateInput(tx, ty, state);
-                    break;
                 case Screen::SENSOR_SETUP:
                     result = handleSensorSetupInput(tx, ty, state);
                     break;
-                case Screen::SENSOR_RAW:
-                    result = handleSensorRawInput(tx, ty);
-                    break;
                 case Screen::VISUALIZE:
                     result = handleVisualizeInput(tx, ty);
+                    break;
+                case Screen::SENSOR_CONFIG:
+                    result = handleSensorConfigInput(tx, ty, state, config);
+                    break;
+                case Screen::SENSOR_EDIT:
+                    result = handleSensorEditInput(tx, ty, state, config);
                     break;
             }
 
@@ -125,20 +122,17 @@ void UI::render(ExcavatorState *state) {
         case Screen::MAIN:
             renderMainScreen(renderer, state);
             break;
-        case Screen::CONFIG:
-            // No config screen yet
-            break;
-        case Screen::CALIBRATE:
-            renderCalibrateScreen(renderer, state);
-            break;
         case Screen::SENSOR_SETUP:
             renderSensorSetupScreen(renderer);
             break;
-        case Screen::SENSOR_RAW:
-            renderSensorRawScreen(renderer, state);
-            break;
         case Screen::VISUALIZE:
             renderVisualizeScreen(renderer, state, config);
+            break;
+        case Screen::SENSOR_CONFIG:
+            renderSensorConfigScreen(renderer, state, config);
+            break;
+        case Screen::SENSOR_EDIT:
+            renderSensorEditScreen(renderer, state, config);
             break;
     }
 

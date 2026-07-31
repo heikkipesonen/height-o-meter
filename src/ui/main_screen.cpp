@@ -5,22 +5,16 @@
 #include <cstdio>
 
 namespace {
-    Button calibrateBtn{{10, 720, 145, 70}, "CAL"};
-    Button sensorSetupBtn{{165, 720, 145, 70}, "SETUP"};
-    Button visualizeBtn{{320, 720, 150, 70}, "VIS"};
-    Button sensorRawBtn{{10, 640, 225, 70}, "RAW"};
-    Button zeroBtn{{245, 640, 225, 70}, "ZERO"};
+    Button visualizeBtn{{10, 720, 150, 70}, "VIS"};
+    Button sensorConfigBtn{{170, 720, 150, 70}, "CFG"};
+    Button zeroBtn{{330, 720, 140, 70}, "ZERO"};
 }
 
 ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
-    if (calibrateBtn.contains(tx, ty)) {
-        return {Screen::CALIBRATE, true};
-    } else if (sensorSetupBtn.contains(tx, ty)) {
-        return {Screen::SENSOR_SETUP, true};
-    } else if (visualizeBtn.contains(tx, ty)) {
+    if (visualizeBtn.contains(tx, ty)) {
         return {Screen::VISUALIZE, true};
-    } else if (sensorRawBtn.contains(tx, ty)) {
-        return {Screen::SENSOR_RAW, true};
+    } else if (sensorConfigBtn.contains(tx, ty)) {
+        return {Screen::SENSOR_CONFIG, true};
     } else if (zeroBtn.contains(tx, ty)) {
         // TODO: zero calibration
         return {Screen::MAIN, true};
@@ -95,9 +89,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     SDL_Rect statusDot = {SCREEN_WIDTH - 30, 10, 20, 20};
     SDL_RenderFillRect(renderer, &statusDot);
 
-    calibrateBtn.draw(renderer);
-    sensorSetupBtn.draw(renderer);
     visualizeBtn.draw(renderer);
-    sensorRawBtn.draw(renderer);
+    sensorConfigBtn.draw(renderer);
     zeroBtn.draw(renderer);
 }

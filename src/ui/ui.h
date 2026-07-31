@@ -12,7 +12,7 @@ constexpr int SCREEN_HEIGHT = 800;
 constexpr int DISPLAY_WIDTH = 800;
 constexpr int DISPLAY_HEIGHT = 480;
 
-enum class Screen { MAIN, CONFIG, CALIBRATE, SENSOR_SETUP, SENSOR_RAW, VISUALIZE };
+enum class Screen { MAIN, SENSOR_SETUP, VISUALIZE, SENSOR_CONFIG, SENSOR_EDIT };
 
 // Screen handler result
 struct ScreenResult {
@@ -22,7 +22,7 @@ struct ScreenResult {
 
 class UI {
 public:
-    UI(const ExcavatorConfig *config);
+    UI(ExcavatorConfig *config);
     ~UI();
 
     bool init();
@@ -33,7 +33,7 @@ private:
     SDL_Renderer *renderer = nullptr;
     SDL_Texture *renderTarget = nullptr;
     Screen currentScreen = Screen::MAIN;
-    const ExcavatorConfig *config = nullptr;
+    ExcavatorConfig *config = nullptr;
 
     void handleInput(ExcavatorState *state);
     void render(ExcavatorState *state);

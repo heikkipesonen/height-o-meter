@@ -1,11 +1,15 @@
 #include <thread>
 #include "src/excavator/excavator.h"
 #include "src/config/config.h"
+#include "src/config/config_file.h"
 #include "src/ui/ui.h"
 
 int main(int argc, char *argv[]) {
-    // Load config
+    // Load config (compiled defaults)
     ExcavatorConfig config = getConfig();
+    
+    // Override with saved config file if exists
+    loadSensorConfig(&config, CONFIG_FILE_PATH);
 
     // Shared state
     ExcavatorState state;

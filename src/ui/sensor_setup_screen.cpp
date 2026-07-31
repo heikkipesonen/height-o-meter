@@ -32,7 +32,7 @@ namespace {
 
 ScreenResult handleSensorSetupInput(int tx, int ty, ExcavatorState *state) {
     if (backBtn.contains(tx, ty)) {
-        return {Screen::MAIN, true};
+        return {Screen::SENSOR_CONFIG, true};
     } else if (currentIdMinus.contains(tx, ty)) {
         if (setupCurrentId > 1) setupCurrentId--;
         return {Screen::SENSOR_SETUP, true};
