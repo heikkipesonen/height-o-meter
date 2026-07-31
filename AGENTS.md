@@ -89,5 +89,32 @@ Known positions:
 - `src/excavator/excavator.cpp` - Position calculation, sensor reading
 - `src/excavator/excavator.h` - State structs, sensor enums
 - `src/ui/ui.cpp` - Main UI loop, screen switching
+- `src/ui/layout.h` - Layout constants (margins, gaps, row heights, screen dimensions)
 - `src/ui/visualize_screen.cpp` - Arm visualization for debugging
-- `src/ui/main_screen.cpp` - Main display with depth/reach
+- `src/ui/main_screen.cpp` - Main display with depth/reach (values shown in cm)
+
+## UI Layout System
+
+All screens use `src/ui/layout.h` for consistent spacing:
+```cpp
+namespace Layout {
+    constexpr int SCREEN_WIDTH = 480;
+    constexpr int SCREEN_HEIGHT = 800;
+    constexpr int MARGIN = 20;
+    constexpr int GAP = 10;
+    constexpr int CONTENT_WIDTH = 440;  // SCREEN_WIDTH - 2*MARGIN
+    constexpr int BUTTON_HEIGHT = 60;
+    constexpr int ROW_HEIGHT = 70;      // BUTTON_HEIGHT + GAP
+    constexpr int HALF_WIDTH = 215;     // (CONTENT_WIDTH - GAP) / 2
+    constexpr int BOTTOM_Y = 720;
+    // ROW1_Y through ROW8_Y for standard row positions
+}
+```
+
+Add `using namespace Layout;` at top of screen files.
+
+## Gotchas
+
+- Helper functions like `drawValueBox` must be `static` if defined in multiple .cpp files (linker error otherwise)
+- Main screen shows depth/reach in **cm** (divided by 10 from internal mm values)
+- Sensor angles stored in `state->sensors[i].roll` (X) and `.pitch` (Y) - processed angle from `getSensorAngle()`
