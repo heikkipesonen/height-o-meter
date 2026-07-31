@@ -60,8 +60,18 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         
         if (!sensor.connected || cfg.length_mm == 0) continue;
         
-        double angle_deg = (cfg.axis == MountAxis::X) ? sensor.roll : sensor.pitch;
-        if (cfg.inverted) angle_deg = -angle_deg;
+        double angle_deg;
+        if (cfg.axis == MountAxis::X) {
+            if (cfg.no_offset) {
+                angle_deg = cfg.inverted ? -sensor.roll : sensor.roll;
+            } else if (cfg.inverted) {
+                angle_deg = sensor.roll - 90.0;
+            } else {
+                angle_deg = 90.0 - sensor.roll;
+            }
+        } else {
+            angle_deg = cfg.inverted ? -sensor.pitch : sensor.pitch;
+        }
         double rad = toRadians(angle_deg);
         
         x += std::sin(rad) * cfg.length_mm;

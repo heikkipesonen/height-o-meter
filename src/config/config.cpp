@@ -23,23 +23,23 @@ ExcavatorConfig getConfig() {
   // Sensor 1: Boom A (main boom)
   config.sensors[1].id = 2;
   config.sensors[1].name = "Boom A";
-  config.sensors[1].axis = MountAxis::Y;
+  config.sensors[1].axis = MountAxis::X;
   config.sensors[1].inverted = false;
   config.sensors[1].length_mm = 180;
 
   // Sensor 2: Boom B (secondary boom)
   config.sensors[2].id = 3;
   config.sensors[2].name = "Boom B";
-  config.sensors[2].axis = MountAxis::Y;
+  config.sensors[2].axis = MountAxis::X;
   config.sensors[2].inverted = false;
   config.sensors[2].length_mm = 180;
 
   // Sensor 3: Stick
   config.sensors[3].id = 4;
   config.sensors[3].name = "Stick";
-  config.sensors[3].axis = MountAxis::Y;
+  config.sensors[3].axis = MountAxis::X;
   config.sensors[3].inverted = false;
-  config.sensors[3].points_down = true;
+  config.sensors[3].points_down = false;
   config.sensors[3].length_mm = 250;
 
   // Sensor 4: Coupler/bucket (curl angle)
@@ -48,6 +48,7 @@ ExcavatorConfig getConfig() {
   config.sensors[4].axis = MountAxis::X;  // X is curl
   config.sensors[4].inverted = true;
   config.sensors[4].points_down = true;
+  config.sensors[4].no_offset = true;  // Don't apply 90° offset
   config.sensors[4].length_mm = 97;  // 37mm to tilt pin + 60mm to bucket edge
 
   // Sensor 5: Test sensor (for setup)
