@@ -12,7 +12,7 @@ struct SensorConfig {
     MountAxis axis = MountAxis::Y;  // Which axis to use
     bool inverted = false;          // Flip angle sign
     bool points_down = false;       // True if 0° means pointing down
-    bool no_offset = false;         // Skip 90° offset for X axis
+    double offset = 0.0;            // Angle offset to apply
     int length_mm = 0;              // Arm segment length in mm
 };
 

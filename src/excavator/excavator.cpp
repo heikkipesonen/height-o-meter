@@ -101,20 +101,10 @@ int update_device_id(modbus_t *ctx, int newId) {
 }
 
 // Get the angle to use from sensor based on config
-// X axis: sensor gives 90° when vertical, math expects 0° = vertical (unless no_offset)
 double getSensorAngle(const Sensor &sensor, const SensorConfig &cfg) {
-    double angle;
-    if (cfg.axis == MountAxis::X) {
-        if (cfg.no_offset) {
-            angle = cfg.inverted ? -sensor.roll : sensor.roll;
-        } else if (cfg.inverted) {
-            angle = sensor.roll - 90.0;
-        } else {
-            angle = 90.0 - sensor.roll;
-        }
-    } else {
-        angle = cfg.inverted ? -sensor.pitch : sensor.pitch;
-    }
+    double angle = (cfg.axis == MountAxis::X) ? sensor.roll : sensor.pitch;
+    angle = cfg.offset - angle;
+    if (cfg.inverted) angle = -angle;
     return angle;
 }
 
