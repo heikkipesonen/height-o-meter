@@ -8,6 +8,8 @@
 #include "sensor_edit_screen.h"
 #include <cstdio>
 
+using namespace Layout;
+
 UI::UI(ExcavatorConfig *config) : config(config) {}
 
 UI::~UI() {

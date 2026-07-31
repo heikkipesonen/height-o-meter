@@ -2,25 +2,34 @@
 #include "button.h"
 #include "fonts.h"
 #include "colors.h"
+#include "layout.h"
 #include <cstdio>
 
+using namespace Layout;
+
 namespace {
-    Button backBtn{{20, 720, 210, 60}, "Back"};
+    constexpr int VALUE_BOX_WIDTH = 120;
+    constexpr int VALUE_BOX_X = (SCREEN_WIDTH - VALUE_BOX_WIDTH) / 2;
     
-    // Current ID row
-    Button currentIdMinus{{20, 70, 60, 60}, "-"};
-    Button currentIdMinus10{{90, 70, 80, 60}, "-10"};
-    Button currentIdPlus10{{310, 70, 80, 60}, "+10"};
-    Button currentIdPlus{{400, 70, 60, 60}, "+"};
+    // Current ID row - ROW1
+    Button currentIdMinus{{MARGIN, ROW1_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "-"};
+    Button currentIdMinus10{{MARGIN + SMALL_BTN_WIDTH + GAP, ROW1_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "-10"};
+    Button currentIdPlus10{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, ROW1_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "+10"};
+    Button currentIdPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, ROW1_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "+"};
     
-    // New ID row
-    Button newIdMinus{{20, 230, 60, 60}, "-"};
-    Button newIdMinus10{{90, 230, 80, 60}, "-10"};
-    Button newIdPlus10{{310, 230, 80, 60}, "+10"};
-    Button newIdPlus{{400, 230, 60, 60}, "+"};
+    // Read button and status - ROW2
+    Button readBtn{{MARGIN, ROW2_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Read"};
     
-    Button readBtn{{20, 150, 200, 50}, "Read"};
-    Button assignBtn{{20, 330, SCREEN_WIDTH - 40, 60}, "Assign ID"};
+    // New ID row - ROW4
+    Button newIdMinus{{MARGIN, ROW4_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "-"};
+    Button newIdMinus10{{MARGIN + SMALL_BTN_WIDTH + GAP, ROW4_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "-10"};
+    Button newIdPlus10{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, ROW4_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "+10"};
+    Button newIdPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, ROW4_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "+"};
+    
+    // Assign button - ROW5
+    Button assignBtn{{MARGIN, ROW5_Y, CONTENT_WIDTH, BUTTON_HEIGHT}, "Assign ID"};
+    
+    Button backBtn{{MARGIN, BOTTOM_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Back"};
 
     int setupCurrentId = 1;
     int setupNewId = 1;
@@ -80,63 +89,61 @@ ScreenResult handleSensorSetupInput(int tx, int ty, ExcavatorState *state) {
     return {Screen::SENSOR_SETUP, false};
 }
 
+static void drawValueBox(SDL_Renderer *renderer, int y, const char *value) {
+    SDL_Rect box = {VALUE_BOX_X, y, VALUE_BOX_WIDTH, BUTTON_HEIGHT};
+    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
+    SDL_RenderFillRect(renderer, &box);
+    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
+    SDL_RenderDrawRect(renderer, &box);
+    if (getFontLarge()) {
+        drawTextCentered(renderer, getFontLarge(), VALUE_BOX_X, y, VALUE_BOX_WIDTH, BUTTON_HEIGHT, value);
+    }
+}
+
 void renderSensorSetupScreen(SDL_Renderer *renderer) {
+    // Title
+    if (getFontSmall()) {
+        drawTextCentered(renderer, getFontSmall(), 0, TITLE_Y, SCREEN_WIDTH, 30, "Sensor ID Setup");
+    }
+    
     // Current ID section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 20, "Current ID:");
+        drawText(renderer, getFontSmall(), MARGIN, ROW1_Y - 25, "Current ID:");
     }
     
     currentIdMinus.draw(renderer);
     currentIdMinus10.draw(renderer);
-    
-    SDL_Rect currentIdBox = {180, 70, 120, 60};
-    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
-    SDL_RenderFillRect(renderer, &currentIdBox);
-    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
-    SDL_RenderDrawRect(renderer, &currentIdBox);
-    if (getFontLarge()) {
-        char buf[8];
-        snprintf(buf, sizeof(buf), "%d", setupCurrentId);
-        drawTextCentered(renderer, getFontLarge(), 180, 70, 120, 60, buf);
-    }
-    
+    char currentIdBuf[8];
+    snprintf(currentIdBuf, sizeof(currentIdBuf), "%d", setupCurrentId);
+    drawValueBox(renderer, ROW1_Y, currentIdBuf);
     currentIdPlus10.draw(renderer);
     currentIdPlus.draw(renderer);
     
+    // Read button and sensor status
     readBtn.draw(renderer);
-
-    // Sensor status
+    
     if (getFontSmall()) {
         char buf[64];
         if (setupSensorConnected) {
-            snprintf(buf, sizeof(buf), "Roll: %.1f  Pitch: %.1f", setupSensorRoll, setupSensorPitch);
+            snprintf(buf, sizeof(buf), "X:%.1f Y:%.1f", setupSensorRoll, setupSensorPitch);
             Color green = {0, 255, 0, 255};
-            drawText(renderer, getFontSmall(), 240, 165, buf, green);
+            drawText(renderer, getFontSmall(), RIGHT_HALF_X, ROW2_Y + 15, buf, green);
         } else {
             Color red = {255, 100, 100, 255};
-            drawText(renderer, getFontSmall(), 240, 165, "Not connected", red);
+            drawText(renderer, getFontSmall(), RIGHT_HALF_X, ROW2_Y + 15, "Not connected", red);
         }
     }
 
     // New ID section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 210, "New ID:");
+        drawText(renderer, getFontSmall(), MARGIN, ROW4_Y - 25, "New ID:");
     }
     
     newIdMinus.draw(renderer);
     newIdMinus10.draw(renderer);
-    
-    SDL_Rect newIdBox = {180, 230, 120, 60};
-    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
-    SDL_RenderFillRect(renderer, &newIdBox);
-    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
-    SDL_RenderDrawRect(renderer, &newIdBox);
-    if (getFontLarge()) {
-        char buf[8];
-        snprintf(buf, sizeof(buf), "%d", setupNewId);
-        drawTextCentered(renderer, getFontLarge(), 180, 230, 120, 60, buf);
-    }
-    
+    char newIdBuf[8];
+    snprintf(newIdBuf, sizeof(newIdBuf), "%d", setupNewId);
+    drawValueBox(renderer, ROW4_Y, newIdBuf);
     newIdPlus10.draw(renderer);
     newIdPlus.draw(renderer);
 
@@ -144,7 +151,7 @@ void renderSensorSetupScreen(SDL_Renderer *renderer) {
 
     // Status message
     if (getFontSmall()) {
-        drawTextCentered(renderer, getFontSmall(), 0, 460, SCREEN_WIDTH, 30, setupStatus);
+        drawTextCentered(renderer, getFontSmall(), 0, ROW6_Y, SCREEN_WIDTH, 30, setupStatus);
     }
 
     backBtn.draw(renderer);

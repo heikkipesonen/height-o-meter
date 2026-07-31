@@ -2,46 +2,53 @@
 #include "button.h"
 #include "fonts.h"
 #include "colors.h"
+#include "layout.h"
 #include "../config/config_file.h"
 #include "../excavator/excavator.h"
 #include <cstdio>
+
+using namespace Layout;
 
 namespace {
     int editSensorIndex = 0;
     const char* statusMsg = "";
     
-    // ID controls
-    Button idMinus{{20, 120, 60, 60}, "-"};
-    Button idMinus10{{90, 120, 80, 60}, "-10"};
-    Button idPlus10{{310, 120, 80, 60}, "+10"};
-    Button idPlus{{400, 120, 60, 60}, "+"};
+    // Numeric control layout helper
+    constexpr int VALUE_BOX_WIDTH = 120;
+    constexpr int VALUE_BOX_X = (SCREEN_WIDTH - VALUE_BOX_WIDTH) / 2;  // centered
     
-    // Axis toggle
-    Button axisX{{20, 230, 210, 60}, "X (Roll)"};
-    Button axisY{{250, 230, 210, 60}, "Y (Pitch)"};
+    // ID controls - ROW1
+    Button idMinus{{MARGIN, ROW1_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "-"};
+    Button idMinus10{{MARGIN + SMALL_BTN_WIDTH + GAP, ROW1_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "-10"};
+    Button idPlus10{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, ROW1_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "+10"};
+    Button idPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, ROW1_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "+"};
     
-    // Inverted toggle
-    Button invertedOn{{20, 310, 210, 60}, "Inverted"};
-    Button invertedOff{{250, 310, 210, 60}, "Normal"};
+    // Axis toggle - ROW2
+    Button axisX{{MARGIN, ROW2_Y, HALF_WIDTH, BUTTON_HEIGHT}, "X (Roll)"};
+    Button axisY{{RIGHT_HALF_X, ROW2_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Y (Pitch)"};
     
-    // Points down toggle
-    Button pointsDownOn{{20, 390, 210, 60}, "Points Down"};
-    Button pointsDownOff{{250, 390, 210, 60}, "Points Up"};
+    // Inverted toggle - ROW3
+    Button invertedOn{{MARGIN, ROW3_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Inverted"};
+    Button invertedOff{{RIGHT_HALF_X, ROW3_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Normal"};
     
-    // Offset controls
-    Button offsetMinus{{20, 500, 60, 60}, "-1"};
-    Button offsetMinusFine{{90, 500, 80, 60}, "-0.1"};
-    Button offsetPlusFine{{310, 500, 80, 60}, "+0.1"};
-    Button offsetPlus{{400, 500, 60, 60}, "+1"};
+    // Points down toggle - ROW4
+    Button pointsDownOn{{MARGIN, ROW4_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Points Down"};
+    Button pointsDownOff{{RIGHT_HALF_X, ROW4_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Points Up"};
     
-    // Length controls
-    Button lengthMinus{{20, 610, 60, 60}, "-1"};
-    Button lengthMinus10{{90, 610, 80, 60}, "-10"};
-    Button lengthPlus10{{310, 610, 80, 60}, "+10"};
-    Button lengthPlus{{400, 610, 60, 60}, "+1"};
+    // Offset controls - ROW5
+    Button offsetMinus{{MARGIN, ROW5_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "-1"};
+    Button offsetMinusFine{{MARGIN + SMALL_BTN_WIDTH + GAP, ROW5_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "-0.1"};
+    Button offsetPlusFine{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, ROW5_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "+0.1"};
+    Button offsetPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, ROW5_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "+1"};
     
-    Button backBtn{{20, 720, 140, 60}, "Back"};
-    Button saveBtn{{320, 720, 140, 60}, "Save"};
+    // Length controls - ROW6
+    Button lengthMinus{{MARGIN, ROW6_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "-1"};
+    Button lengthMinus10{{MARGIN + SMALL_BTN_WIDTH + GAP, ROW6_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "-10"};
+    Button lengthPlus10{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, ROW6_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "+10"};
+    Button lengthPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, ROW6_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "+1"};
+    
+    Button backBtn{{MARGIN, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "Back"};
+    Button saveBtn{{THIRD_RIGHT_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "Save"};
 }
 
 void setEditSensor(int index) {
@@ -171,6 +178,17 @@ void drawToggleButton(SDL_Renderer *renderer, const Button &btn, const char *lab
     }
 }
 
+static void drawValueBox(SDL_Renderer *renderer, int y, const char *value) {
+    SDL_Rect box = {VALUE_BOX_X, y, VALUE_BOX_WIDTH, BUTTON_HEIGHT};
+    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
+    SDL_RenderFillRect(renderer, &box);
+    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
+    SDL_RenderDrawRect(renderer, &box);
+    if (getFontLarge()) {
+        drawTextCentered(renderer, getFontLarge(), VALUE_BOX_X, y, VALUE_BOX_WIDTH, BUTTON_HEIGHT, value);
+    }
+}
+
 void renderSensorEditScreen(SDL_Renderer *renderer, ExcavatorState *state, ExcavatorConfig *config) {
     const SensorConfig &cfg = config->sensors[editSensorIndex];
     const Sensor &sensor = state->sensors[editSensorIndex];
@@ -179,7 +197,7 @@ void renderSensorEditScreen(SDL_Renderer *renderer, ExcavatorState *state, Excav
     if (getFontSmall()) {
         char buf[64];
         snprintf(buf, sizeof(buf), "Edit: %s", cfg.name);
-        drawTextCentered(renderer, getFontSmall(), 0, 15, SCREEN_WIDTH, 30, buf);
+        drawTextCentered(renderer, getFontSmall(), 0, TITLE_Y, SCREEN_WIDTH, 30, buf);
     }
     
     // Live values
@@ -187,101 +205,74 @@ void renderSensorEditScreen(SDL_Renderer *renderer, ExcavatorState *state, Excav
         char buf[128];
         double angle = getSensorAngle(sensor, cfg);
         if (sensor.connected) {
-            snprintf(buf, sizeof(buf), "Raw X:%.1f Y:%.1f -> %.1f°", sensor.roll, sensor.pitch, angle);
+            snprintf(buf, sizeof(buf), "Raw X:%.1f Y:%.1f -> %.1f", sensor.roll, sensor.pitch, angle);
         } else {
             snprintf(buf, sizeof(buf), "Not connected");
         }
         Color c = sensor.connected ? Color{150, 255, 150, 255} : Color{255, 150, 150, 255};
-        drawTextCentered(renderer, getFontSmall(), 0, 45, SCREEN_WIDTH, 30, buf, c);
+        drawTextCentered(renderer, getFontSmall(), 0, TITLE_Y + 30, SCREEN_WIDTH, 30, buf, c);
     }
     
     // ID section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 95, "Modbus ID:");
+        drawText(renderer, getFontSmall(), MARGIN, ROW1_Y - 25, "Modbus ID:");
     }
     idMinus.draw(renderer);
     idMinus10.draw(renderer);
-    
-    SDL_Rect idBox = {180, 120, 120, 60};
-    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
-    SDL_RenderFillRect(renderer, &idBox);
-    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
-    SDL_RenderDrawRect(renderer, &idBox);
-    if (getFontLarge()) {
-        char buf[8];
-        snprintf(buf, sizeof(buf), "%d", cfg.id);
-        drawTextCentered(renderer, getFontLarge(), 180, 120, 120, 60, buf);
-    }
-    
+    char idBuf[8];
+    snprintf(idBuf, sizeof(idBuf), "%d", cfg.id);
+    drawValueBox(renderer, ROW1_Y, idBuf);
     idPlus10.draw(renderer);
     idPlus.draw(renderer);
     
     // Axis section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 205, "Axis:");
+        drawText(renderer, getFontSmall(), MARGIN, ROW2_Y - 25, "Axis:");
     }
     drawToggleButton(renderer, axisX, "X (Roll)", cfg.axis == MountAxis::X);
     drawToggleButton(renderer, axisY, "Y (Pitch)", cfg.axis == MountAxis::Y);
     
     // Inverted section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 285, "Direction:");
+        drawText(renderer, getFontSmall(), MARGIN, ROW3_Y - 25, "Direction:");
     }
     drawToggleButton(renderer, invertedOn, "Inverted", cfg.inverted);
     drawToggleButton(renderer, invertedOff, "Normal", !cfg.inverted);
     
     // Points down section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 365, "Zero angle:");
+        drawText(renderer, getFontSmall(), MARGIN, ROW4_Y - 25, "Zero angle:");
     }
     drawToggleButton(renderer, pointsDownOn, "Points Down", cfg.points_down);
     drawToggleButton(renderer, pointsDownOff, "Points Up", !cfg.points_down);
     
     // Offset section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 475, "Offset:");
+        drawText(renderer, getFontSmall(), MARGIN, ROW5_Y - 25, "Offset:");
     }
     offsetMinus.draw(renderer);
     offsetMinusFine.draw(renderer);
-    
-    SDL_Rect offsetBox = {180, 500, 120, 60};
-    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
-    SDL_RenderFillRect(renderer, &offsetBox);
-    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
-    SDL_RenderDrawRect(renderer, &offsetBox);
-    if (getFontLarge()) {
-        char buf[16];
-        snprintf(buf, sizeof(buf), "%.1f", cfg.offset);
-        drawTextCentered(renderer, getFontLarge(), 180, 500, 120, 60, buf);
-    }
-    
+    char offsetBuf[16];
+    snprintf(offsetBuf, sizeof(offsetBuf), "%.1f", cfg.offset);
+    drawValueBox(renderer, ROW5_Y, offsetBuf);
     offsetPlusFine.draw(renderer);
     offsetPlus.draw(renderer);
     
     // Length section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), 20, 585, "Length (mm):");
+        drawText(renderer, getFontSmall(), MARGIN, ROW6_Y - 25, "Length (mm):");
     }
     lengthMinus.draw(renderer);
     lengthMinus10.draw(renderer);
-    
-    SDL_Rect lengthBox = {180, 610, 120, 60};
-    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
-    SDL_RenderFillRect(renderer, &lengthBox);
-    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
-    SDL_RenderDrawRect(renderer, &lengthBox);
-    if (getFontLarge()) {
-        char buf[16];
-        snprintf(buf, sizeof(buf), "%d", cfg.length_mm);
-        drawTextCentered(renderer, getFontLarge(), 180, 610, 120, 60, buf);
-    }
-    
+    char lengthBuf[16];
+    snprintf(lengthBuf, sizeof(lengthBuf), "%d", cfg.length_mm);
+    drawValueBox(renderer, ROW6_Y, lengthBuf);
     lengthPlus10.draw(renderer);
     lengthPlus.draw(renderer);
     
     // Status
     if (getFontSmall() && statusMsg[0]) {
-        drawTextCentered(renderer, getFontSmall(), 160, 720, 160, 60, statusMsg);
+        drawTextCentered(renderer, getFontSmall(), THIRD_CENTER_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT, statusMsg);
     }
     
     backBtn.draw(renderer);

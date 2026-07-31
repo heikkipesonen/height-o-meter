@@ -3,24 +3,30 @@
 #include "button.h"
 #include "fonts.h"
 #include "colors.h"
+#include "layout.h"
 #include "../config/config_file.h"
 #include "../excavator/excavator.h"
 #include <cstdio>
 
+using namespace Layout;
+
 namespace {
+    constexpr int LIST_ITEM_HEIGHT = 100;
+    constexpr int LIST_START_Y = 50;
+    
     // Sensor list buttons (tap to edit)
     Button sensorBtns[6] = {
-        {{20, 50, 440, 100}, ""},
-        {{20, 155, 440, 100}, ""},
-        {{20, 260, 440, 100}, ""},
-        {{20, 365, 440, 100}, ""},
-        {{20, 470, 440, 100}, ""},
-        {{20, 575, 440, 100}, ""},
+        {{MARGIN, LIST_START_Y + 0 * (LIST_ITEM_HEIGHT + GAP), CONTENT_WIDTH, LIST_ITEM_HEIGHT}, ""},
+        {{MARGIN, LIST_START_Y + 1 * (LIST_ITEM_HEIGHT + GAP), CONTENT_WIDTH, LIST_ITEM_HEIGHT}, ""},
+        {{MARGIN, LIST_START_Y + 2 * (LIST_ITEM_HEIGHT + GAP), CONTENT_WIDTH, LIST_ITEM_HEIGHT}, ""},
+        {{MARGIN, LIST_START_Y + 3 * (LIST_ITEM_HEIGHT + GAP), CONTENT_WIDTH, LIST_ITEM_HEIGHT}, ""},
+        {{MARGIN, LIST_START_Y + 4 * (LIST_ITEM_HEIGHT + GAP), CONTENT_WIDTH, LIST_ITEM_HEIGHT}, ""},
+        {{MARGIN, LIST_START_Y + 5 * (LIST_ITEM_HEIGHT + GAP), CONTENT_WIDTH, LIST_ITEM_HEIGHT}, ""},
     };
     
-    Button backBtn{{20, 720, 140, 60}, "Back"};
-    Button setupBtn{{170, 720, 140, 60}, "Setup"};
-    Button saveBtn{{320, 720, 140, 60}, "Save"};
+    Button backBtn{{MARGIN, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "Back"};
+    Button setupBtn{{THIRD_CENTER_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "Setup"};
+    Button saveBtn{{THIRD_RIGHT_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "Save"};
     
     const char* statusMsg = "";
 }
@@ -57,7 +63,7 @@ ScreenResult handleSensorConfigInput(int tx, int ty, ExcavatorState *state, Exca
 void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, ExcavatorConfig *config) {
     // Title
     if (getFontSmall()) {
-        drawTextCentered(renderer, getFontSmall(), 0, 15, SCREEN_WIDTH, 30, "Sensors (tap to edit)");
+        drawTextCentered(renderer, getFontSmall(), 0, TITLE_Y, SCREEN_WIDTH, 30, "Sensors (tap to edit)");
     }
     
     // Sensor list
@@ -81,11 +87,11 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
             // Line 1: Name, ID, status
             char buf[64];
             snprintf(buf, sizeof(buf), "%s (ID:%d)", cfg.name, cfg.id);
-            drawText(renderer, getFontSmall(), rect.x + 10, rect.y + 20, buf);
+            drawText(renderer, getFontSmall(), rect.x + GAP, rect.y + MARGIN, buf);
             
             const char *status = sensor.connected ? "OK" : "NC";
             Color statusColor = sensor.connected ? Color{100, 200, 100, 255} : Color{200, 100, 100, 255};
-            drawText(renderer, getFontSmall(), rect.x + rect.w - 50, rect.y + 20, status, statusColor);
+            drawText(renderer, getFontSmall(), rect.x + rect.w - 50, rect.y + MARGIN, status, statusColor);
             
             // Line 2: Raw X, Y values
             if (sensor.connected) {
@@ -93,13 +99,13 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
             } else {
                 snprintf(buf, sizeof(buf), "X: --   Y: --");
             }
-            drawText(renderer, getFontSmall(), rect.x + 10, rect.y + 55, buf);
+            drawText(renderer, getFontSmall(), rect.x + GAP, rect.y + 55, buf);
         }
     }
     
     // Status message
     if (getFontSmall() && statusMsg[0]) {
-        drawTextCentered(renderer, getFontSmall(), 0, 690, SCREEN_WIDTH, 25, statusMsg);
+        drawTextCentered(renderer, getFontSmall(), 0, BOTTOM_Y - 30, SCREEN_WIDTH, 25, statusMsg);
     }
     
     backBtn.draw(renderer);

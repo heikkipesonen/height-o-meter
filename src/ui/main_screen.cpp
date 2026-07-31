@@ -2,12 +2,15 @@
 #include "button.h"
 #include "fonts.h"
 #include "colors.h"
+#include "layout.h"
 #include <cstdio>
 
+using namespace Layout;
+
 namespace {
-    Button visualizeBtn{{10, 720, 150, 70}, "VIS"};
-    Button sensorConfigBtn{{170, 720, 150, 70}, "CFG"};
-    Button zeroBtn{{330, 720, 140, 70}, "ZERO"};
+    Button visualizeBtn{{MARGIN, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "VIS"};
+    Button sensorConfigBtn{{THIRD_CENTER_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "CFG"};
+    Button zeroBtn{{THIRD_RIGHT_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "ZERO"};
 }
 
 ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {

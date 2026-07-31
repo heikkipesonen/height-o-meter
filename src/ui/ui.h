@@ -3,10 +3,7 @@
 #include <SDL2/SDL.h>
 #include "../excavator/excavator.h"
 #include "../config/config.h"
-
-// Screen dimensions (logical, portrait)
-constexpr int SCREEN_WIDTH = 480;
-constexpr int SCREEN_HEIGHT = 800;
+#include "layout.h"
 
 // Physical display dimensions
 constexpr int DISPLAY_WIDTH = 800;

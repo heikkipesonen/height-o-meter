@@ -2,12 +2,14 @@
 #include "button.h"
 #include "fonts.h"
 #include "colors.h"
+#include "layout.h"
 #include "src/excavator/excavator.h"
 #include <cmath>
 
+using namespace Layout;
+
 namespace {
-    Button backBtn{{20, 720, 210, 60}, "Back"};
-    
+    Button backBtn{{MARGIN, BOTTOM_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Back"};
     double toRadians(double deg) { return deg * M_PI / 180.0; }
 }
 
