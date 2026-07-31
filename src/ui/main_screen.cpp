@@ -11,6 +11,10 @@ namespace {
     Button visualizeBtn{{MARGIN, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "VIS"};
     Button sensorConfigBtn{{THIRD_CENTER_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "CFG"};
     Button zeroBtn{{THIRD_RIGHT_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "ZERO"};
+    
+    bool zeroSet = false;
+    double zeroDepth = 0;
+    double zeroReach = 0;
 }
 
 ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
@@ -19,63 +23,100 @@ ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
     } else if (sensorConfigBtn.contains(tx, ty)) {
         return {Screen::SENSOR_CONFIG, true};
     } else if (zeroBtn.contains(tx, ty)) {
-        // TODO: zero calibration
+        if (zeroSet) {
+            // Clear zero
+            zeroSet = false;
+            zeroDepth = 0;
+            zeroReach = 0;
+        } else {
+            // Set zero
+            zeroSet = true;
+            zeroDepth = state->depth;
+            zeroReach = state->reach;
+        }
         return {Screen::MAIN, true};
     }
     return {Screen::MAIN, false};
 }
 
 void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
-    int depth = (int)state->depth;
-    bool goingUp = depth >= 0;
+    double depth = state->depth;
+    double reach = state->reach;
     
-    int centerX = SCREEN_WIDTH / 2;
-    int arrowCenterY = 180;
-    int arrowX = centerX - 40;
+    // Apply zero offset if set
+    if (zeroSet) {
+        depth = state->depth - zeroDepth;
+        reach = state->reach - zeroReach;
+    }
     
+    int depthInt = (int)depth;
+    bool goingUp = depthInt >= 0;
+    
+    // Depth triangle
+    int triX = 60;
+    int triY = 220;
+    int triSize = 40;
     SDL_SetRenderDrawColor(renderer, goingUp ? 0 : 255, goingUp ? 200 : 60, 60, 255);
-    
-    // Draw arrow
     if (goingUp) {
-        SDL_Rect arrowBody = {arrowX + 15, arrowCenterY, 50, 80};
-        SDL_RenderFillRect(renderer, &arrowBody);
-        for (int y = 0; y < 80; y++) {
-            int halfWidth = 60 - y;
-            if (halfWidth > 0) {
-                SDL_RenderDrawLine(renderer, arrowX + 40 - halfWidth, arrowCenterY - y, 
-                                  arrowX + 40 + halfWidth, arrowCenterY - y);
-            }
+        // Up triangle
+        for (int y = 0; y < triSize; y++) {
+            int halfWidth = y * triSize / triSize;
+            SDL_RenderDrawLine(renderer, triX - halfWidth, triY + y, triX + halfWidth, triY + y);
         }
     } else {
-        SDL_Rect arrowBody = {arrowX + 15, arrowCenterY - 80, 50, 80};
-        SDL_RenderFillRect(renderer, &arrowBody);
-        for (int y = 0; y < 80; y++) {
-            int halfWidth = 60 - y;
-            if (halfWidth > 0) {
-                SDL_RenderDrawLine(renderer, arrowX + 40 - halfWidth, arrowCenterY + y, 
-                                  arrowX + 40 + halfWidth, arrowCenterY + y);
-            }
+        // Down triangle
+        for (int y = 0; y < triSize; y++) {
+            int halfWidth = (triSize - y) * triSize / triSize;
+            SDL_RenderDrawLine(renderer, triX - halfWidth, triY + y, triX + halfWidth, triY + y);
         }
     }
     
     // Depth value (convert mm to cm)
-    int depthCm = depth / 10;
+    int depthCm = depthInt / 10;
     char depthStr[32];
     snprintf(depthStr, sizeof(depthStr), "%d", depthCm < 0 ? -depthCm : depthCm);
     if (getFontHuge()) {
-        drawTextCentered(renderer, getFontHuge(), 0, 280, SCREEN_WIDTH, 120, depthStr, {255, 255, 255, 255});
+        Color depthColor = goingUp ? Color{0, 200, 60, 255} : Color{255, 60, 60, 255};
+        drawTextCentered(renderer, getFontHuge(), 80, 180, SCREEN_WIDTH - 80, 120, depthStr, depthColor);
     }
     
     // Divider
     SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
-    SDL_RenderDrawLine(renderer, 40, 440, SCREEN_WIDTH - 40, 440);
+    SDL_RenderDrawLine(renderer, 40, 340, SCREEN_WIDTH - 40, 340);
+    
+    // Reach triangle
+    bool reachPositive = reach >= 0;
+    int reachTriX = 60;
+    int reachTriY = 420;
+    SDL_SetRenderDrawColor(renderer, reachPositive ? 0 : 255, reachPositive ? 200 : 60, 60, 255);
+    if (reachPositive) {
+        // Right triangle (away)
+        for (int x = 0; x < triSize; x++) {
+            int halfHeight = (triSize - x) * triSize / triSize;
+            SDL_RenderDrawLine(renderer, reachTriX + x, reachTriY - halfHeight, reachTriX + x, reachTriY + halfHeight);
+        }
+    } else {
+        // Left triangle (toward)
+        for (int x = 0; x < triSize; x++) {
+            int halfHeight = x * triSize / triSize;
+            SDL_RenderDrawLine(renderer, reachTriX + x, reachTriY - halfHeight, reachTriX + x, reachTriY + halfHeight);
+        }
+    }
     
     // Reach value (convert mm to cm)
-    int reachCm = (int)state->reach / 10;
+    int reachCm = (int)reach / 10;
     char reachStr[32];
-    snprintf(reachStr, sizeof(reachStr), "%d", reachCm);
+    snprintf(reachStr, sizeof(reachStr), "%d", reachCm < 0 ? -reachCm : reachCm);
     if (getFontHuge()) {
-        drawTextCentered(renderer, getFontHuge(), 0, 490, SCREEN_WIDTH, 120, reachStr, {255, 255, 255, 255});
+        Color reachColor = reachPositive ? Color{0, 200, 60, 255} : Color{255, 60, 60, 255};
+        drawTextCentered(renderer, getFontHuge(), 80, 380, SCREEN_WIDTH - 80, 120, reachStr, reachColor);
+    }
+    
+    // Zero indicator
+    if (zeroSet) {
+        if (getFontSmall()) {
+            drawTextCentered(renderer, getFontSmall(), 0, 520, SCREEN_WIDTH, 30, "RELATIVE", {255, 200, 0, 255});
+        }
     }
     
     // Status dot
@@ -92,5 +133,8 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
 
     visualizeBtn.draw(renderer);
     sensorConfigBtn.draw(renderer);
+    
+    // Change button text based on state
+    zeroBtn.label = zeroSet ? "CLR" : "ZERO";
     zeroBtn.draw(renderer);
 }
