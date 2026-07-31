@@ -5,10 +5,10 @@
 #include <cstdio>
 
 namespace {
-    Button calibrateBtn{{10, 410, 190, 60}, "CAL"};
-    Button sensorSetupBtn{{210, 410, 190, 60}, "SETUP"};
-    Button sensorRawBtn{{410, 410, 190, 60}, "RAW"};
-    Button zeroBtn{{610, 410, 180, 60}, "ZERO"};
+    Button calibrateBtn{{10, 720, 225, 70}, "CAL"};
+    Button sensorSetupBtn{{245, 720, 225, 70}, "SETUP"};
+    Button sensorRawBtn{{10, 640, 225, 70}, "RAW"};
+    Button zeroBtn{{245, 640, 225, 70}, "ZERO"};
 }
 
 ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
@@ -30,47 +30,59 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     bool goingUp = depth >= 0;
     
     int centerX = SCREEN_WIDTH / 2;
-    int arrowCenterY = 100;
-    int arrowX = centerX - 180;
+    int arrowCenterY = 180;
+    int arrowX = centerX - 40;
     
     SDL_SetRenderDrawColor(renderer, goingUp ? 0 : 255, goingUp ? 200 : 60, 60, 255);
     
+    // Draw arrow
     if (goingUp) {
-        SDL_Rect arrowBody = {arrowX + 15, arrowCenterY, 50, 60};
+        SDL_Rect arrowBody = {arrowX + 15, arrowCenterY, 50, 80};
         SDL_RenderFillRect(renderer, &arrowBody);
-        for (int y = 0; y < 60; y++) {
-            int halfWidth = 55 - y;
-            SDL_RenderDrawLine(renderer, arrowX + 40 - halfWidth, arrowCenterY - y, 
-                              arrowX + 40 + halfWidth, arrowCenterY - y);
+        for (int y = 0; y < 80; y++) {
+            int halfWidth = 60 - y;
+            if (halfWidth > 0) {
+                SDL_RenderDrawLine(renderer, arrowX + 40 - halfWidth, arrowCenterY - y, 
+                                  arrowX + 40 + halfWidth, arrowCenterY - y);
+            }
         }
     } else {
-        SDL_Rect arrowBody = {arrowX + 15, arrowCenterY - 60, 50, 60};
+        SDL_Rect arrowBody = {arrowX + 15, arrowCenterY - 80, 50, 80};
         SDL_RenderFillRect(renderer, &arrowBody);
-        for (int y = 0; y < 60; y++) {
-            int halfWidth = 55 - y;
-            SDL_RenderDrawLine(renderer, arrowX + 40 - halfWidth, arrowCenterY + y, 
-                              arrowX + 40 + halfWidth, arrowCenterY + y);
+        for (int y = 0; y < 80; y++) {
+            int halfWidth = 60 - y;
+            if (halfWidth > 0) {
+                SDL_RenderDrawLine(renderer, arrowX + 40 - halfWidth, arrowCenterY + y, 
+                                  arrowX + 40 + halfWidth, arrowCenterY + y);
+            }
         }
     }
     
+    // Depth value
     char depthStr[32];
     snprintf(depthStr, sizeof(depthStr), "%d", depth < 0 ? -depth : depth);
     if (getFontHuge()) {
-        drawText(renderer, getFontHuge(), arrowX + 100, 35, depthStr, {255, 255, 255, 255});
+        drawTextCentered(renderer, getFontHuge(), 0, 280, SCREEN_WIDTH, 120, depthStr, {255, 255, 255, 255});
     }
     
+    // Divider
     SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
-    SDL_RenderDrawLine(renderer, 40, 200, SCREEN_WIDTH - 40, 200);
+    SDL_RenderDrawLine(renderer, 40, 420, SCREEN_WIDTH - 40, 420);
     
+    // Reach label and value
+    if (getFontSmall()) {
+        drawTextCentered(renderer, getFontSmall(), 0, 440, SCREEN_WIDTH, 30, "REACH", {150, 150, 150, 255});
+    }
     int reach = (int)state->reach;
     char reachStr[32];
     snprintf(reachStr, sizeof(reachStr), "%d", reach);
     if (getFontHuge()) {
-        drawTextCentered(renderer, getFontHuge(), 0, 220, SCREEN_WIDTH, 150, reachStr, {255, 255, 255, 255});
+        drawTextCentered(renderer, getFontHuge(), 0, 470, SCREEN_WIDTH, 120, reachStr, {255, 255, 255, 255});
     }
     
+    // Status dot
     bool allConnected = true;
-    for (int i = 0; i < NUM_SENSORS - 1; i++) {  // Skip test sensor
+    for (int i = 0; i < NUM_SENSORS - 1; i++) {
         if (state->sensors[i].id != 0 && !state->sensors[i].connected) {
             allConnected = false;
             break;

@@ -3,9 +3,13 @@
 #include <SDL2/SDL.h>
 #include "../excavator/excavator.h"
 
-// Screen dimensions
-constexpr int SCREEN_WIDTH = 800;
-constexpr int SCREEN_HEIGHT = 480;
+// Screen dimensions (logical, portrait)
+constexpr int SCREEN_WIDTH = 480;
+constexpr int SCREEN_HEIGHT = 800;
+
+// Physical display dimensions
+constexpr int DISPLAY_WIDTH = 800;
+constexpr int DISPLAY_HEIGHT = 480;
 
 enum class Screen { MAIN, CONFIG, CALIBRATE, SENSOR_SETUP, SENSOR_RAW };
 
@@ -26,6 +30,7 @@ public:
 private:
     SDL_Window *window = nullptr;
     SDL_Renderer *renderer = nullptr;
+    SDL_Texture *renderTarget = nullptr;
     Screen currentScreen = Screen::MAIN;
 
     void handleInput(ExcavatorState *state);

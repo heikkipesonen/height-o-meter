@@ -11,6 +11,7 @@ UI::UI() {}
 
 UI::~UI() {
     closeFonts();
+    if (renderTarget) SDL_DestroyTexture(renderTarget);
     if (renderer) SDL_DestroyRenderer(renderer);
     if (window) SDL_DestroyWindow(window);
     SDL_Quit();
@@ -29,7 +30,7 @@ bool UI::init() {
     window = SDL_CreateWindow(
         "Height-O-Meter",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        SCREEN_WIDTH, SCREEN_HEIGHT,
+        DISPLAY_WIDTH, DISPLAY_HEIGHT,
         SDL_WINDOW_SHOWN
     );
 
@@ -38,12 +39,28 @@ bool UI::init() {
         return false;
     }
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
     if (!renderer) {
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE);
+        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE | SDL_RENDERER_TARGETTEXTURE);
     }
 
-    return renderer != nullptr;
+    if (!renderer) {
+        return false;
+    }
+
+    renderTarget = SDL_CreateTexture(
+        renderer,
+        SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_TARGET,
+        SCREEN_WIDTH, SCREEN_HEIGHT
+    );
+
+    if (!renderTarget) {
+        printf("Render target creation failed: %s\n", SDL_GetError());
+        return false;
+    }
+
+    return true;
 }
 
 void UI::handleInput(ExcavatorState *state) {
@@ -93,6 +110,8 @@ void UI::handleInput(ExcavatorState *state) {
 }
 
 void UI::render(ExcavatorState *state) {
+    // Render to texture
+    SDL_SetRenderTarget(renderer, renderTarget);
     SDL_SetRenderDrawColor(renderer, BG_COLOR.r, BG_COLOR.g, BG_COLOR.b, BG_COLOR.a);
     SDL_RenderClear(renderer);
 
@@ -114,6 +133,13 @@ void UI::render(ExcavatorState *state) {
             break;
     }
 
+    // Blit texture to screen (rotated 90° clockwise)
+    // destRect defines where texture is placed, then rotated around center
+    // We want 480x800 texture to end up filling 800x480 screen after 90° rotation
+    SDL_SetRenderTarget(renderer, nullptr);
+    SDL_Rect destRect = {(DISPLAY_WIDTH - SCREEN_WIDTH) / 2, (DISPLAY_HEIGHT - SCREEN_HEIGHT) / 2, SCREEN_WIDTH, SCREEN_HEIGHT};
+    SDL_Point center = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2};
+    SDL_RenderCopyEx(renderer, renderTarget, nullptr, &destRect, 90.0, &center, SDL_FLIP_NONE);
     SDL_RenderPresent(renderer);
 }
 
