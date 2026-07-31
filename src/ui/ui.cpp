@@ -71,8 +71,10 @@ void UI::handleInput(ExcavatorState *state) {
         }
 
         if (e.type == SDL_FINGERDOWN) {
-            int tx = (int)(e.tfinger.x * SCREEN_WIDTH);
-            int ty = (int)(e.tfinger.y * SCREEN_HEIGHT);
+            // Window is 800x480, logical is 480x800 rotated 90° CW
+            // Physical top-left -> logical bottom-left
+            int tx = (int)(e.tfinger.y * SCREEN_WIDTH);
+            int ty = (int)((1.0f - e.tfinger.x) * SCREEN_HEIGHT);
 
             ScreenResult result = {currentScreen, false};
 
