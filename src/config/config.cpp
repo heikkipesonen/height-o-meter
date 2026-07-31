@@ -45,9 +45,9 @@ ExcavatorConfig getConfig() {
   config.sensors[3].points_down = false;
   config.sensors[3].length_mm = 250;
 
-  // Sensor 4: Coupler/bucket (curl angle)
+  // Sensor 4: Coupler/bucket (curl angle on X, sideways tilt on Y)
   config.sensors[4].id = 5;
-  config.sensors[4].name = "Tilt";
+  config.sensors[4].name = "Curl";
   config.sensors[4].axis = MountAxis::X;
   config.sensors[4].inverted = false;
   config.sensors[4].points_down = true;

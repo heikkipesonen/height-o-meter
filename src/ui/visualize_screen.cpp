@@ -98,7 +98,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     };
     
     // Draw each segment
-    for (int i = SENSOR_BOOM_A; i <= SENSOR_TILT; i++) {
+    for (int i = SENSOR_BOOM_A; i <= SENSOR_CURL_TILT; i++) {
         const Sensor &sensor = state->sensors[i];
         const SensorConfig &cfg = config->sensors[i];
         
@@ -135,11 +135,10 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     // Debug info below visualization
     if (getFontSmall()) {
         char buf[64];
-        const Sensor &sSuper = state->sensors[SENSOR_SUPERSTRUCTURE];
         const Sensor &sA = state->sensors[SENSOR_BOOM_A];
         const Sensor &sB = state->sensors[SENSOR_BOOM_B];
         const Sensor &sS = state->sensors[SENSOR_STICK];
-        const Sensor &sT = state->sensors[SENSOR_TILT];
+        const Sensor &sT = state->sensors[SENSOR_CURL_TILT];
         
         int textY = drawAreaY + drawAreaH + 20;
         
@@ -150,12 +149,16 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
                  getSensorAngle(sB, config->sensors[SENSOR_BOOM_B]));
         drawTextCentered(renderer, getFontSmall(), SCREEN_WIDTH/2, textY, SCREEN_WIDTH/2, 25, buf);
         
-        snprintf(buf, sizeof(buf), "Stick: %.1f  Tilt: %.1f", getSensorAngle(sS, config->sensors[SENSOR_STICK]),
-                 getSensorAngle(sT, config->sensors[SENSOR_TILT]));
+        snprintf(buf, sizeof(buf), "Stick: %.1f  Curl: %.1f", getSensorAngle(sS, config->sensors[SENSOR_STICK]),
+                 getSensorAngle(sT, config->sensors[SENSOR_CURL_TILT]));
         drawTextCentered(renderer, getFontSmall(), 0, textY + 25, SCREEN_WIDTH, 25, buf);
         
-        snprintf(buf, sizeof(buf), "Depth: %d   Reach: %d", (int)state->depth, (int)state->reach);
-        drawTextCentered(renderer, getFontSmall(), 0, textY + 55, SCREEN_WIDTH, 25, buf);
+        // Show sideways tilt from Y axis
+        snprintf(buf, sizeof(buf), "Tilt: %.1f", sT.pitch);
+        drawTextCentered(renderer, getFontSmall(), 0, textY + 50, SCREEN_WIDTH/2, 25, buf);
+        
+        snprintf(buf, sizeof(buf), "D: %d  R: %d", (int)state->depth, (int)state->reach);
+        drawTextCentered(renderer, getFontSmall(), SCREEN_WIDTH/2, textY + 50, SCREEN_WIDTH/2, 25, buf);
     }
     
     backBtn.draw(renderer);

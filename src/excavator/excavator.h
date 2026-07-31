@@ -11,7 +11,7 @@ enum SensorIndex {
     SENSOR_BOOM_A = 1,
     SENSOR_BOOM_B = 2,
     SENSOR_STICK = 3,
-    SENSOR_TILT = 4,
+    SENSOR_CURL_TILT = 4,
     SENSOR_TEST = 5  // For setup screen probing
 };
 

@@ -122,7 +122,7 @@ void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
     double y = baseX * std::sin(superRad) + baseY * std::cos(superRad);
     
     // Each sensor reads absolute angle from vertical (gravity-referenced)
-    for (int i = SENSOR_BOOM_A; i <= SENSOR_TILT; i++) {
+    for (int i = SENSOR_BOOM_A; i <= SENSOR_CURL_TILT; i++) {
         const Sensor &sensor = state->sensors[i];
         const SensorConfig &cfg = config->sensors[i];
         
@@ -143,7 +143,7 @@ void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
     }
     
     // Bucket sideways tilt - lowest corner is half_width * sin(tilt) below center
-    const Sensor &tilt_sensor = state->sensors[SENSOR_TILT];
+    const Sensor &tilt_sensor = state->sensors[SENSOR_CURL_TILT];
     if (tilt_sensor.connected) {
         double tilt_deg = tilt_sensor.pitch;  // Y axis is sideways tilt
         double tilt_rad = toRadians(std::abs(tilt_deg));
