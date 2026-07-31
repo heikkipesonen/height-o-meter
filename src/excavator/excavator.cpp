@@ -100,14 +100,6 @@ int update_device_id(modbus_t *ctx, int newId) {
     return 0;
 }
 
-// Get the angle to use from sensor based on config
-double getSensorAngle(const Sensor &sensor, const SensorConfig &cfg) {
-    double angle = (cfg.axis == MountAxis::X) ? sensor.roll : sensor.pitch;
-    angle = cfg.offset - angle;
-    if (cfg.inverted) angle = -angle;
-    return angle;
-}
-
 // Calculate position from all arm segments
 // Sensors read absolute angle from vertical (0° = straight up/down depending on mount)
 // Positive angle = tilted away from cab
@@ -151,6 +143,14 @@ void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
 }
 
 } // anonymous namespace
+
+// Get the angle to use from sensor based on config
+double getSensorAngle(const Sensor &sensor, const SensorConfig &cfg) {
+    double angle = (cfg.axis == MountAxis::X) ? sensor.roll : sensor.pitch;
+    angle = cfg.offset - angle;
+    if (cfg.inverted) angle = -angle;
+    return angle;
+}
 
 void excavator_thread(ExcavatorState *state, const ExcavatorConfig *config) {
     modbus_t *ctx = nullptr;

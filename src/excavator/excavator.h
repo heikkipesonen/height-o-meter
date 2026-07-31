@@ -47,3 +47,6 @@ bool probe_sensor(ExcavatorState *state, int id, double *roll, double *pitch);
 
 // Modbus thread entry point
 void excavator_thread(ExcavatorState *state, const ExcavatorConfig *config);
+
+// Get angle from sensor based on config (axis, offset, invert)
+double getSensorAngle(const Sensor &sensor, const SensorConfig &cfg);

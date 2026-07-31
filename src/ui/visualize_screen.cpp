@@ -2,6 +2,7 @@
 #include "button.h"
 #include "fonts.h"
 #include "colors.h"
+#include "src/excavator/excavator.h"
 #include <cmath>
 
 namespace {
@@ -60,9 +61,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         
         if (!sensor.connected || cfg.length_mm == 0) continue;
         
-        double angle_deg = (cfg.axis == MountAxis::X) ? sensor.roll : sensor.pitch;
-        angle_deg = cfg.offset - angle_deg;
-        if (cfg.inverted) angle_deg = -angle_deg;
+        double angle_deg = getSensorAngle(sensor, cfg);
         double rad = toRadians(angle_deg);
         
         x += std::sin(rad) * cfg.length_mm;
