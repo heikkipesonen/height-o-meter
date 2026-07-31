@@ -135,6 +135,15 @@ void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
         }
     }
     
+    // Bucket sideways tilt - lowest corner is half_width * sin(tilt) below center
+    const Sensor &tilt_sensor = state->sensors[SENSOR_TILT];
+    if (tilt_sensor.connected) {
+        double tilt_deg = tilt_sensor.pitch;  // Y axis is sideways tilt
+        double tilt_rad = toRadians(std::abs(tilt_deg));
+        double bucket_half_width = 35.0;  // 70mm / 2
+        y -= bucket_half_width * std::sin(tilt_rad);
+    }
+    
     state->reach = x;
     state->depth = y;
 }

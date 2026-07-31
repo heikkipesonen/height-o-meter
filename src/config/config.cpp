@@ -45,7 +45,7 @@ ExcavatorConfig getConfig() {
   // Sensor 4: Coupler/bucket (curl angle)
   config.sensors[4].id = 5;
   config.sensors[4].name = "Tilt";
-  config.sensors[4].axis = MountAxis::Y;
+  config.sensors[4].axis = MountAxis::X;  // X is curl
   config.sensors[4].inverted = true;
   config.sensors[4].points_down = true;
   config.sensors[4].length_mm = 97;  // 37mm to tilt pin + 60mm to bucket edge
