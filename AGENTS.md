@@ -7,6 +7,8 @@
 - One change at a time, test, then commit if working
 - When reverting, be careful not to lose working code
 - No guessing - ask for sensor readings and actual measurements
+- Do not build locally - macOS lacks libmodbus and SDL2
+- Use existing UI components (Button, colors, layout constants) instead of custom drawing
 
 ## Deploy
 

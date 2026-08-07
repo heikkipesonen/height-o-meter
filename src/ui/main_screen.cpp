@@ -10,37 +10,87 @@
 using namespace Layout;
 
 namespace {
+    // Stored positions
+    constexpr int MAX_POSITIONS = 4;
+    constexpr int POS_BTN_WIDTH = (CONTENT_WIDTH - 3 * GAP) / 4;  // 102
+    constexpr int POS_BTN_HEIGHT = 60;
+    constexpr int POS_BTN_Y = 10;
+    
+    struct StoredPosition {
+        Sensor sensors[NUM_SENSORS];
+        double depth = 0;   // cached at capture time
+        double reach = 0;   // cached at capture time
+        bool occupied = false;
+    };
+    
+    StoredPosition storedPositions[MAX_POSITIONS];
+    int selectedPosition = -1;  // -1 = none selected
+    
+    // Position slot buttons (A-F)
+    Button positionBtns[MAX_POSITIONS];
+    bool positionBtnsInitialized = false;
+    
+    void initPositionButtons() {
+        if (positionBtnsInitialized) return;
+        int totalWidth = MAX_POSITIONS * POS_BTN_WIDTH + (MAX_POSITIONS - 1) * GAP;
+        int startX = (SCREEN_WIDTH - totalWidth) / 2;
+        for (int i = 0; i < MAX_POSITIONS; i++) {
+            char label[2] = {(char)('A' + i), '\0'};
+            positionBtns[i] = {{startX + i * (POS_BTN_WIDTH + GAP), POS_BTN_Y, POS_BTN_WIDTH, POS_BTN_HEIGHT}, ""};
+        }
+        positionBtnsInitialized = true;
+    }
+    
     Button visualizeBtn{{MARGIN, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "VIS"};
     Button sensorConfigBtn{{THIRD_CENTER_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "CFG"};
     Button zeroBtn{{THIRD_RIGHT_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "ZERO"};
-    
-    bool zeroSet = false;
-    double zeroDepth = 0;
-    double zeroReach = 0;
-    double zeroSuperX = 0;
-    double zeroSuperY = 0;
 }
 
 ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
+    initPositionButtons();
+    
+    // Position slot buttons
+    for (int i = 0; i < MAX_POSITIONS; i++) {
+        if (positionBtns[i].contains(tx, ty)) {
+            if (selectedPosition == i) {
+                // Tap selected again to deselect
+                selectedPosition = -1;
+            } else {
+                selectedPosition = i;
+            }
+            return {Screen::MAIN, true};
+        }
+    }
+    
     if (visualizeBtn.contains(tx, ty)) {
         return {Screen::VISUALIZE, true};
     } else if (sensorConfigBtn.contains(tx, ty)) {
         return {Screen::SENSOR_CONFIG, true};
     } else if (zeroBtn.contains(tx, ty)) {
-        if (zeroSet) {
-            // Clear zero
-            zeroSet = false;
-            zeroDepth = 0;
-            zeroReach = 0;
-            zeroSuperX = 0;
-            zeroSuperY = 0;
+        if (selectedPosition >= 0) {
+            // Store current position into selected slot
+            StoredPosition &pos = storedPositions[selectedPosition];
+            for (int i = 0; i < NUM_SENSORS; i++) {
+                pos.sensors[i] = state->sensors[i];
+            }
+            pos.depth = state->depth;
+            pos.reach = state->reach;
+            pos.occupied = true;
         } else {
-            // Set zero
-            zeroSet = true;
-            zeroDepth = state->depth;
-            zeroReach = state->reach;
-            zeroSuperX = state->sensors[SENSOR_SUPERSTRUCTURE].x;
-            zeroSuperY = state->sensors[SENSOR_SUPERSTRUCTURE].y;
+            // No slot selected - store into first empty slot
+            for (int i = 0; i < MAX_POSITIONS; i++) {
+                if (!storedPositions[i].occupied) {
+                    StoredPosition &pos = storedPositions[i];
+                    for (int j = 0; j < NUM_SENSORS; j++) {
+                        pos.sensors[j] = state->sensors[j];
+                    }
+                    pos.depth = state->depth;
+                    pos.reach = state->reach;
+                    pos.occupied = true;
+                    selectedPosition = i;
+                    break;
+                }
+            }
         }
         return {Screen::MAIN, true};
     }
@@ -48,14 +98,50 @@ ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
 }
 
 void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
+    initPositionButtons();
+    
+    // Draw position slot buttons
+    for (int i = 0; i < MAX_POSITIONS; i++) {
+        SDL_Rect rect = positionBtns[i].rect;
+        
+        // Background color based on state
+        if (selectedPosition == i) {
+            // Selected - highlight
+            SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, 255);
+            SDL_RenderFillRect(renderer, &rect);
+        } else if (storedPositions[i].occupied) {
+            // Occupied - standard button color
+            SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, BTN_COLOR.a);
+            SDL_RenderFillRect(renderer, &rect);
+        } else {
+            // Empty slot - dimmed
+            SDL_SetRenderDrawColor(renderer, 30, 30, 40, 255);
+            SDL_RenderFillRect(renderer, &rect);
+        }
+        
+        // Label
+        char label[2] = {(char)('A' + i), '\0'};
+        if (getFontButton()) {
+            Color labelColor = storedPositions[i].occupied ? TEXT_COLOR : Color{60, 60, 70, 255};
+            if (selectedPosition == i) labelColor = {255, 255, 255, 255};
+            drawTextCentered(renderer, getFontButton(), rect.x, rect.y, rect.w, rect.h, label, labelColor);
+        }
+    }
+    
     double depth = state->depth;
     double reach = state->reach;
     
-    // Calculate rotation if zero is set
+    // Calculate deviation if comparing to stored position
     double rotation = 0;
+    bool zeroSet = (selectedPosition >= 0 && storedPositions[selectedPosition].occupied);
+    
     if (zeroSet) {
-        depth = state->depth - zeroDepth;
-        reach = state->reach - zeroReach;
+        const StoredPosition &stored = storedPositions[selectedPosition];
+        
+        // Calculate stored depth/reach (would need config, for now use stored sensor values directly)
+        // For now, compare superstructure rotation
+        double zeroSuperX = stored.sensors[SENSOR_SUPERSTRUCTURE].x;
+        double zeroSuperY = stored.sensors[SENSOR_SUPERSTRUCTURE].y;
         
         double zeroAngle = atan2(zeroSuperX, zeroSuperY);
         double currentAngle = atan2(state->sensors[SENSOR_SUPERSTRUCTURE].x, 
@@ -63,6 +149,10 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
         rotation = (currentAngle - zeroAngle) * 180.0 / M_PI;
         while (rotation > 180) rotation -= 360;
         while (rotation < -180) rotation += 360;
+        
+        // Depth/reach deviation from stored values
+        depth = state->depth - stored.depth;
+        reach = state->reach - stored.reach;
     }
     
     // Circle parameters
@@ -196,15 +286,6 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     if (getFontHuge()) {
         Color reachColor = reachPositive ? Color{0, 200, 60, 255} : Color{255, 60, 60, 255};
         drawTextCentered(renderer, getFontHuge(), centerX - 140, centerY + 20, 280, 80, reachStr, reachColor);
-    }
-    
-    // Debug: show superstructure X/Y at top
-    double superX = state->sensors[SENSOR_SUPERSTRUCTURE].x;
-    double superY = state->sensors[SENSOR_SUPERSTRUCTURE].y;
-    char debugStr[64];
-    snprintf(debugStr, sizeof(debugStr), "X:%.1f Y:%.1f", superX, superY);
-    if (getFontSmall()) {
-        drawTextCentered(renderer, getFontSmall(), 0, 10, SCREEN_WIDTH - 40, 30, debugStr, {100, 100, 100, 255});
     }
     
     // RELATIVE indicator below circle
