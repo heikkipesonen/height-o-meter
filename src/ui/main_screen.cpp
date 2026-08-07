@@ -109,7 +109,7 @@ ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
     return {Screen::MAIN, false};
 }
 
-void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
+void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state, const ExcavatorConfig *config) {
     initPositionButtons();
     
     // Draw position slot buttons
@@ -208,6 +208,61 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
                 SDL_RenderPoint(renderer, x, y);
             }
         }
+    }
+    
+    // Superstructure lean indicators
+    const Sensor &superSensor = state->sensors[SENSOR_SUPERSTRUCTURE];
+    const SensorConfig &superCfg = config->sensors[SENSOR_SUPERSTRUCTURE];
+    if (superSensor.connected) {
+        int barLength = radius * 2;  // Same as circle diameter
+        int barThickness = bgThickness;  // Same as circle
+        int indicatorSize = 20;
+        
+        // Get roll and pitch based on config axis
+        double rollAngle = (superCfg.axis == MountAxis::X) ? superSensor.x : superSensor.y;
+        double pitchAngle = (superCfg.axis == MountAxis::X) ? superSensor.y : superSensor.x;
+        if (superCfg.inverted) {
+            rollAngle = -rollAngle;
+            pitchAngle = -pitchAngle;
+        }
+        
+        // X bar (roll - left/right) - horizontal below circle
+        int xBarX = centerX - barLength / 2;
+        int xBarY = centerY + radius + 20;
+        
+        // Background bar
+        SDL_SetRenderDrawColor(renderer, CIRCLE_BG_COLOR.r, CIRCLE_BG_COLOR.g, CIRCLE_BG_COLOR.b, 255);
+        SDL_FRect xBarBg = {(float)xBarX, (float)xBarY, (float)barLength, (float)barThickness};
+        SDL_RenderFillRect(renderer, &xBarBg);
+        
+        // Indicator position (clamp to bar range)
+        double rollPos = rollAngle / 15.0;  // Normalize to -1..1 for ±15°
+        if (rollPos < -1) rollPos = -1;
+        if (rollPos > 1) rollPos = 1;
+        int xIndicatorX = centerX + (int)(rollPos * (barLength / 2 - indicatorSize / 2)) - indicatorSize / 2;
+        
+        SDL_SetRenderDrawColor(renderer, CIRCLE_ARC_COLOR.r, CIRCLE_ARC_COLOR.g, CIRCLE_ARC_COLOR.b, 255);
+        SDL_FRect xIndicator = {(float)xIndicatorX, (float)xBarY, (float)indicatorSize, (float)barThickness};
+        SDL_RenderFillRect(renderer, &xIndicator);
+        
+        // Y bar (pitch - front/back) - vertical on left of circle
+        int yBarX = centerX - radius - 20 - barThickness;
+        int yBarY = centerY - barLength / 2;
+        
+        // Background bar
+        SDL_SetRenderDrawColor(renderer, CIRCLE_BG_COLOR.r, CIRCLE_BG_COLOR.g, CIRCLE_BG_COLOR.b, 255);
+        SDL_FRect yBarBg = {(float)yBarX, (float)yBarY, (float)barThickness, (float)barLength};
+        SDL_RenderFillRect(renderer, &yBarBg);
+        
+        // Indicator position
+        double pitchPos = pitchAngle / 15.0;  // ±15°
+        if (pitchPos < -1) pitchPos = -1;
+        if (pitchPos > 1) pitchPos = 1;
+        int yIndicatorY = centerY + (int)(pitchPos * (barLength / 2 - indicatorSize / 2)) - indicatorSize / 2;
+        
+        SDL_SetRenderDrawColor(renderer, CIRCLE_ARC_COLOR.r, CIRCLE_ARC_COLOR.g, CIRCLE_ARC_COLOR.b, 255);
+        SDL_FRect yIndicator = {(float)yBarX, (float)yIndicatorY, (float)barThickness, (float)indicatorSize};
+        SDL_RenderFillRect(renderer, &yIndicator);
     }
     
     int depthInt = (int)depth;

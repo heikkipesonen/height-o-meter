@@ -118,7 +118,7 @@ void UI::render(ExcavatorState *state) {
 
     switch (currentScreen) {
         case Screen::MAIN:
-            renderMainScreen(renderer, state);
+            renderMainScreen(renderer, state, config);
             break;
         case Screen::SENSOR_SETUP:
             renderSensorSetupScreen(renderer);
