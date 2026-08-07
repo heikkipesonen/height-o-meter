@@ -172,25 +172,24 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     int centerX = SCREEN_WIDTH / 2;
     int centerY = 320;
     int radius = 200;
-    int thickness = 16;
+    int bgThickness = 24;
+    int arcThickness = 16;
     
-    // Draw rotation circle
+    // Draw rotation arc indicator
     if (zeroSet) {
-        // Draw thick circle outline
-        for (int t = 0; t < thickness; t++) {
-            int r = radius - t;
-            // Gray background circle
-            SDL_SetRenderDrawColor(renderer, CIRCLE_BG_COLOR.r, CIRCLE_BG_COLOR.g, CIRCLE_BG_COLOR.b, 255);
-            for (int i = 0; i < 360; i++) {
-                double angle = i * M_PI / 180.0;
+        // Background circle outline
+        SDL_SetRenderDrawColor(renderer, CIRCLE_BG_COLOR.r, CIRCLE_BG_COLOR.g, CIRCLE_BG_COLOR.b, 255);
+        for (double i = 0; i < 360; i += 0.1) {
+            double angle = i * M_PI / 180.0;
+            for (int t = 0; t < bgThickness; t++) {
+                int r = radius - t;
                 int x = centerX + (int)(cos(angle) * r);
                 int y = centerY + (int)(sin(angle) * r);
                 SDL_RenderPoint(renderer, x, y);
             }
         }
         
-        // Draw rotation arc (from top, clockwise)
-        // Top is -90 degrees in screen coords
+        // Arc indicator
         double startAngle = -90;
         double endAngle = -90 + rotation;
         if (rotation < 0) {
@@ -199,40 +198,16 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
             endAngle = tmp;
         }
         
-        // Highlight color
         SDL_SetRenderDrawColor(renderer, CIRCLE_ARC_COLOR.r, CIRCLE_ARC_COLOR.g, CIRCLE_ARC_COLOR.b, 255);
-        for (int t = 0; t < thickness; t++) {
-            int r = radius - t;
-            for (double a = startAngle; (rotation >= 0 ? a <= endAngle : a <= endAngle); a += 0.5) {
-                double angle = a * M_PI / 180.0;
+        for (double a = startAngle; a <= endAngle; a += 0.1) {
+            double angle = a * M_PI / 180.0;
+            for (int t = 0; t < arcThickness; t++) {
+                int r = radius - (bgThickness - arcThickness) / 2 - t;
                 int x = centerX + (int)(cos(angle) * r);
                 int y = centerY + (int)(sin(angle) * r);
                 SDL_RenderPoint(renderer, x, y);
-                if (rotation < 0 && a >= startAngle) break;
-            }
-            // Proper arc drawing
-            double step = 0.5;
-            if (rotation >= 0) {
-                for (double a = startAngle; a <= endAngle; a += step) {
-                    double angle = a * M_PI / 180.0;
-                    int x = centerX + (int)(cos(angle) * r);
-                    int y = centerY + (int)(sin(angle) * r);
-                    SDL_RenderPoint(renderer, x, y);
-                }
-            } else {
-                for (double a = startAngle; a <= endAngle; a += step) {
-                    double angle = a * M_PI / 180.0;
-                    int x = centerX + (int)(cos(angle) * r);
-                    int y = centerY + (int)(sin(angle) * r);
-                    SDL_RenderPoint(renderer, x, y);
-                }
             }
         }
-        
-        // Draw marker at top (zero position)
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_FRect marker = {(float)(centerX - 3), (float)(centerY - radius - 8), 6.0f, 16.0f};
-        SDL_RenderFillRect(renderer, &marker);
     }
     
     int depthInt = (int)depth;

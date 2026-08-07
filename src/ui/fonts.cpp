@@ -81,11 +81,11 @@ bool initFonts() {
         }
     }
 
-    fontHuge = TTF_OpenFont(foundMonoPath ? foundMonoPath : (foundBoldPath ? foundBoldPath : foundPath), 120);
-    fontLarge = TTF_OpenFont(foundMonoPath ? foundMonoPath : foundPath, 48);
-    fontMedium = TTF_OpenFont(foundMonoPath ? foundMonoPath : foundPath, 28);
-    fontSmall = TTF_OpenFont(foundMonoPath ? foundMonoPath : foundPath, 18);
-    fontButton = TTF_OpenFont(foundMonoPath ? foundMonoPath : (foundBoldPath ? foundBoldPath : foundPath), 28);
+    fontHuge = TTF_OpenFont(foundBoldPath ? foundBoldPath : foundPath, 120);
+    fontLarge = TTF_OpenFont(foundBoldPath ? foundBoldPath : foundPath, 48);
+    fontMedium = TTF_OpenFont(foundPath, 28);
+    fontSmall = TTF_OpenFont(foundPath, 18);
+    fontButton = TTF_OpenFont(foundBoldPath ? foundBoldPath : foundPath, 28);
 
     return fontHuge && fontLarge && fontMedium && fontSmall && fontButton;
 }
