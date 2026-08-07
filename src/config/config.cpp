@@ -46,13 +46,14 @@ ExcavatorConfig getConfig() {
   config.sensors[3].length_mm = 250;
 
   // Sensor 4: Coupler/bucket (curl angle on X, sideways tilt on Y)
+  // length_mm = 0 here, effective length comes from active bucket
   config.sensors[4].id = 5;
   config.sensors[4].name = "Curl";
   config.sensors[4].axis = MountAxis::X;
   config.sensors[4].inverted = false;
   config.sensors[4].points_down = true;
   config.sensors[4].offset = 0.0;
-  config.sensors[4].length_mm = 97;
+  config.sensors[4].length_mm = 0;
 
   // Sensor 5: Test sensor (for setup)
   config.sensors[5].id = 80;
@@ -60,6 +61,10 @@ ExcavatorConfig getConfig() {
   config.sensors[5].axis = MountAxis::Y;
   config.sensors[5].inverted = false;
   config.sensors[5].length_mm = 0;
+
+  // Buckets
+  config.buckets.push_back({"Grading 1200mm", 27, 70, 70});
+  config.active_bucket = 0;
 
   return config;
 }

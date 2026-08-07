@@ -64,27 +64,24 @@ Slew angle is calculated from superstructure sensor using two methods:
 
 **Limitation:** On perfectly flat ground with magnetic interference, slew detection may be inaccurate. Re-zero after significant slewing in these conditions.
 
-## Tilt Hitch Configuration
-The tilt hitch connects stick to bucket with two degrees of freedom:
-- **Stick pin to tilt pivot X**: Forward distance from stick pin to tilt pivot (mm)
-- **Stick pin to tilt pivot Z**: Vertical offset from stick pin to tilt pivot (mm) - typically below
-- **Tilt pivot to bucket pin**: Distance from tilt pivot to bucket pin (mm)
-- Curl (X axis): bucket tips forward/back
-- Side tilt (Y axis): bucket tips left/right
-
 ## Bucket Configuration
-Different buckets attach to the same coupler but have different dimensions:
-- **Pin to edge distance**: Distance from bucket pin to bucket cutting edge (mm)
+Each bucket includes coupler and bucket dimensions (coupler may vary between buckets):
+- **Coupler length**: Distance from stick pin to tilt pivot (mm)
+- **Bucket length**: Distance from tilt pivot to bucket cutting edge (mm)
+- **Bucket width**: Width of bucket (mm) - used for sideways tilt compensation
 - **Bucket name**: User-friendly label (e.g., "600mm ditching", "1200mm grading")
 
-Multiple bucket profiles stored, user selects active bucket from UI.
+The curl/tilt sensor (sensor 5) uses:
+- X axis for curl angle (bucket tips forward/back)
+- Y axis for sideways tilt compensation (lowest corner calculation)
+
+Multiple bucket profiles stored in `config.buckets` vector, `active_bucket` index selects current.
 
 Example buckets:
-| Name | Pin to Edge |
-|------|-------------|
-| 600mm ditching | 450 |
-| 1200mm grading | 650 |
-| 300mm trenching | 380 |
+| Name | Coupler | Bucket | Width |
+|------|---------|--------|-------|
+| Grading 1200mm | 27 | 70 | 70 |
+| Ditching 600mm | 27 | 45 | 60 |
 
 ## Kinematics Chain
 ```
@@ -119,14 +116,27 @@ Display Position
 ```
 src/
 ├── main.cpp              # Entry point
+├── config/
+│   ├── config.h          # ExcavatorConfig, SensorConfig, BucketConfig structs
+│   ├── config.cpp        # Default config values
+│   ├── config_file.h     # Save/load config functions
+│   └── config_file.cpp   # Config file persistence
 ├── excavator/
-│   ├── excavator.h       # Section, ExcavatorState (currently 2 sensors)
-│   └── excavator.cpp     # Modbus, sensor reading, position math
+│   ├── excavator.h       # Sensor, ExcavatorState, sensor enums
+│   └── excavator.cpp     # Modbus polling, position calculation
 └── ui/
-    ├── ui.h              # UI class
-    ├── ui.cpp            # Screens, input handling, rendering
+    ├── ui.h              # UI class, Screen enum, ScreenResult
+    ├── ui.cpp            # Main UI loop, screen switching
+    ├── layout.h          # Layout constants (margins, rows, dimensions)
     ├── fonts.h           # Font access, drawing helpers
-    └── fonts.cpp         # Font loading, text rendering
+    ├── fonts.cpp         # Font loading, text rendering
+    ├── colors.h          # Color constants
+    ├── button.h          # Button struct with hit detection
+    ├── main_screen.cpp/h         # Main display (depth/reach)
+    ├── visualize_screen.cpp/h    # Arm visualization for debugging
+    ├── sensor_config_screen.cpp/h # Sensor list
+    ├── sensor_edit_screen.cpp/h   # Edit individual sensor
+    └── sensor_setup_screen.cpp/h  # Change Modbus IDs
 ```
 
 ## Task Breakdown
@@ -162,24 +172,21 @@ src/
 - **Test**: With sensors connected, values update in state
 - **Demo**: UI shows live angle readings from all 5 sensors
 
-### Task 5: Add configuration persistence
+### Task 5: Add configuration persistence ✓ DONE
 - **Objective**: Save/load machine dimensions and bucket profiles
-- Create `config.h/cpp` in `src/` with save/load functions (simple text file)
-- Store: segment lengths, offsets, sensor IDs, axis inversions
-- Store bucket profiles: name, pin-to-edge distance
-- Store active bucket selection
-- Load on startup, save when user modifies config
-- **Test**: Change config, restart, values persist
-- **Demo**: Modify a length in config screen, restart app, value retained
+- Implemented `config_file.h/cpp` with `loadSensorConfig()` / `saveSensorConfig()`
+- Stores sensor config: id, axis, inverted, points_down, offset, length_mm
+- Config saved to `/home/rpi/sensor_config.txt`
+- Load on startup, save via UI buttons
+- **Status**: Complete. Bucket profiles not yet persisted (only sensor config).
 
-### Task 6: Update UI for configuration
+### Task 6: Update UI for configuration (partial)
 - **Objective**: Config screen to edit all segment dimensions and buckets
-- Add input fields for each segment: length, X/Y/Z offset, sensor ID
-- Add bucket management: list buckets, add/edit/delete, select active
-- Add +/- buttons for touch-friendly input
-- Display current values, highlight when modified
-- **Test**: Can modify and save all parameters
-- **Demo**: Add new bucket "800mm grading" with 520mm pin-to-edge
+- **Done**: Sensor config screen lists all sensors with live values, tap to edit
+- **Done**: Sensor edit screen with +/- buttons for ID, axis toggle, inverted toggle, points_down toggle, offset, length
+- **TODO**: Bucket management UI (list buckets, add/edit/delete, select active)
+- **Test**: Can modify and save sensor parameters ✓
+- **Demo**: Edit sensor config via touch, save persists
 
 ### Task 7: Implement zero reference point, slope modes, and sensor calibration
 - **Objective**: User sets reference point/slope, calibrate sensor mounting offsets

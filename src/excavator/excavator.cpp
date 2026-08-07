@@ -104,6 +104,10 @@ int update_device_id(modbus_t *ctx, int newId) {
 // Sensors read absolute angle from vertical (0° = straight up/down depending on mount)
 // Positive angle = tilted away from cab
 void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
+    // Get active bucket
+    const BucketConfig &bucket = config->buckets[config->active_bucket];
+    int bucket_total_length = bucket.coupler_length_mm + bucket.bucket_length_mm;
+    
     // Get superstructure tilt (machine lean)
     const Sensor &superSensor = state->sensors[SENSOR_SUPERSTRUCTURE];
     const SensorConfig &superCfg = config->sensors[SENSOR_SUPERSTRUCTURE];
@@ -126,19 +130,23 @@ void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
         const Sensor &sensor = state->sensors[i];
         const SensorConfig &cfg = config->sensors[i];
         
-        if (!sensor.connected || cfg.length_mm == 0) continue;
+        if (!sensor.connected) continue;
+        
+        // Use bucket length for curl/tilt sensor, otherwise sensor config length
+        int length = (i == SENSOR_CURL_TILT) ? bucket_total_length : cfg.length_mm;
+        if (length == 0) continue;
         
         double angle_deg = getSensorAngle(sensor, cfg);
         double rad = toRadians(angle_deg);
         
         // Horizontal: always sin(angle) * length
-        x += std::sin(rad) * cfg.length_mm;
+        x += std::sin(rad) * length;
         
         // Vertical: cos(angle) * length, but subtract if segment points down at 0°
         if (cfg.points_down) {
-            y -= std::cos(rad) * cfg.length_mm;
+            y -= std::cos(rad) * length;
         } else {
-            y += std::cos(rad) * cfg.length_mm;
+            y += std::cos(rad) * length;
         }
     }
     
@@ -147,7 +155,7 @@ void calculatePosition(ExcavatorState *state, const ExcavatorConfig *config) {
     if (tilt_sensor.connected) {
         double tilt_deg = tilt_sensor.y;  // Y axis is sideways tilt
         double tilt_rad = toRadians(std::abs(tilt_deg));
-        double bucket_half_width = 35.0;  // 70mm / 2
+        double bucket_half_width = bucket.bucket_width_mm / 2.0;
         y -= bucket_half_width * std::sin(tilt_rad);
     }
     

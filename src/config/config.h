@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 // Sensor mounting orientation
 enum class MountAxis {
     X,  // Use X axis
@@ -35,7 +37,10 @@ struct ExcavatorConfig {
     int pivot_offset_y_mm = 0;      // Vertical distance (positive = up)
     
     SensorConfig sensors[6];
-    BucketConfig bucket;
+    
+    // Bucket configurations
+    std::vector<BucketConfig> buckets;
+    int active_bucket = 0;
 };
 
 // Returns the config - edit config.cpp to change values

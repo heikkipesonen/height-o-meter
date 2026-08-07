@@ -1,0 +1,28 @@
+{
+  "name": "height-o-meter",
+  "description": "Excavator grade control embedded C++ project on Raspberry Pi",
+  "prompt": "file:///Users/heikki.pesonen/Documents/height-o-meter/AGENTS.md",
+  "tools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "allowedTools": [
+    "fs_read",
+    "fs_write",
+    "execute_bash",
+    "grep",
+    "glob",
+    "code"
+  ],
+  "resources": [
+    "file://AGENTS.md",
+    "file://README.md",
+    "file://CMakeLists.txt",
+    "file://src/**/*.h",
+    "file://src/**/*.cpp"
+  ]
+}
