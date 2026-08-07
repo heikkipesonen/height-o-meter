@@ -5,7 +5,7 @@ PI="rpi@192.168.4.200"
 DIR="height-o-meter"
 
 echo "Syncing..."
-rsync -q --exclude 'build/' ~/Documents/height-o-meter/src/ $PI:~/$DIR/src/
+rsync -av --checksum --exclude 'build/' --exclude '.git/' ~/Documents/height-o-meter/src/ $PI:~/$DIR/src/
 
 echo "Building..."
 ssh $PI "cd ~/$DIR && make -C build -j4"

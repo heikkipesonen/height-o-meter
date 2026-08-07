@@ -64,7 +64,8 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
     int colX = 220;
     int colY = 300;
     int colStatus = 410;
-    int rowH = 70;
+    int rowH = 60;
+    int rowGap = 10;
     int startY = 30;
     
     // Header
@@ -81,13 +82,14 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
         const SensorConfig &cfg = config->sensors[i];
         const Sensor &sensor = state->sensors[i];
         
-        int y = startY + 30 + i * rowH;
+        int rowY = startY + 40 + i * (rowH + rowGap);
+        int textY = rowY + (rowH - 18) / 2;  // Center text (font ~18px)
         
         // Update button positions for tap detection
-        sensorBtns[i].rect = {MARGIN, y - 10, CONTENT_WIDTH, rowH};
+        sensorBtns[i].rect = {MARGIN, rowY, CONTENT_WIDTH, rowH};
         
         // Row background
-        SDL_FRect rowBg = {(float)MARGIN, (float)(y - 10), (float)CONTENT_WIDTH, (float)rowH};
+        SDL_FRect rowBg = {(float)MARGIN, (float)rowY, (float)CONTENT_WIDTH, (float)rowH};
         SDL_SetRenderDrawColor(renderer, LIST_ITEM_OK_COLOR.r, LIST_ITEM_OK_COLOR.g, LIST_ITEM_OK_COLOR.b, 255);
         SDL_RenderFillRect(renderer, &rowBg);
         
@@ -97,27 +99,27 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
             // Name (shortened for superstructure)
             const char *name = cfg.name;
             if (i == 0) name = "Super";
-            drawText(renderer, getFontSmall(), colName, y, name);
+            drawText(renderer, getFontSmall(), colName + GAP, textY, name);
             
             // ID
             snprintf(buf, sizeof(buf), "%d", cfg.id);
-            drawText(renderer, getFontSmall(), colID, y, buf);
+            drawText(renderer, getFontSmall(), colID, textY, buf);
             
             // X/Y values
             if (sensor.connected) {
                 snprintf(buf, sizeof(buf), "%+.1f", sensor.x);
-                drawText(renderer, getFontSmall(), colX, y, buf);
+                drawText(renderer, getFontSmall(), colX, textY, buf);
                 snprintf(buf, sizeof(buf), "%+.1f", sensor.y);
-                drawText(renderer, getFontSmall(), colY, y, buf);
+                drawText(renderer, getFontSmall(), colY, textY, buf);
             } else {
-                drawText(renderer, getFontSmall(), colX, y, "--");
-                drawText(renderer, getFontSmall(), colY, y, "--");
+                drawText(renderer, getFontSmall(), colX, textY, "--");
+                drawText(renderer, getFontSmall(), colY, textY, "--");
             }
             
             // Status
             const char *status = sensor.connected ? "OK" : "NC";
             Color statusColor = sensor.connected ? SUCCESS_COLOR : ERROR_COLOR;
-            drawText(renderer, getFontSmall(), colStatus, y, status, statusColor);
+            drawText(renderer, getFontSmall(), colStatus, textY, status, statusColor);
         }
     }
     

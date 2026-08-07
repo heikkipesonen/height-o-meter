@@ -36,6 +36,10 @@ struct ExcavatorConfig {
     int pivot_offset_x_mm = 0;      // Horizontal distance
     int pivot_offset_y_mm = 0;      // Vertical distance (positive = up)
     
+    // Lean indicator range (degrees)
+    double lean_x_max = 15.0;       // X bar (roll) range ±
+    double lean_y_max = 15.0;       // Y bar (pitch) range ±
+    
     SensorConfig sensors[6];
     
     // Bucket configurations

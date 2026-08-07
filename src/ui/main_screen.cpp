@@ -236,7 +236,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state, const Excav
         SDL_RenderFillRect(renderer, &xBarBg);
         
         // Indicator position (clamp to bar range)
-        double xPos = xAngle / 15.0;  // Normalize to -1..1 for ±15°
+        double xPos = xAngle / config->lean_x_max;
         if (xPos < -1) xPos = -1;
         if (xPos > 1) xPos = 1;
         int xIndicatorX = centerX + (int)(xPos * (barLength / 2 - indicatorSize / 2)) - indicatorSize / 2;
@@ -255,7 +255,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state, const Excav
         SDL_RenderFillRect(renderer, &yBarBg);
         
         // Indicator position
-        double yPos = yAngle / 15.0;  // ±15°
+        double yPos = yAngle / config->lean_y_max;
         if (yPos < -1) yPos = -1;
         if (yPos > 1) yPos = 1;
         int yIndicatorY = centerY + (int)(yPos * (barLength / 2 - indicatorSize / 2)) - indicatorSize / 2;

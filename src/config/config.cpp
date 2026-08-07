@@ -66,5 +66,8 @@ ExcavatorConfig getConfig() {
   config.buckets.push_back({"Grading 1200mm", 27, 70, 70});
   config.active_bucket = 0;
 
+  config.lean_x_max = 45;
+  config.lean_y_max = 45;
+
   return config;
 }
