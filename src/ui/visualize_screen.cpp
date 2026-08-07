@@ -102,17 +102,24 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         const Sensor &sensor = state->sensors[i];
         const SensorConfig &cfg = config->sensors[i];
         
-        if (!sensor.connected || cfg.length_mm == 0) continue;
+        // Use bucket length for curl/tilt sensor, otherwise sensor config length
+        int length = cfg.length_mm;
+        if (i == SENSOR_CURL_TILT) {
+            const BucketConfig &bucket = config->buckets[config->active_bucket];
+            length = bucket.coupler_length_mm + bucket.bucket_length_mm;
+        }
+        
+        if (!sensor.connected || length == 0) continue;
         
         double angle_deg = getSensorAngle(sensor, cfg);
         double rad = toRadians(angle_deg);
         
-        x += std::sin(rad) * cfg.length_mm;
+        x += std::sin(rad) * length;
         
         if (cfg.points_down) {
-            y -= std::cos(rad) * cfg.length_mm;
+            y -= std::cos(rad) * length;
         } else {
-            y += std::cos(rad) * cfg.length_mm;
+            y += std::cos(rad) * length;
         }
         
         int screenX = pivotX + (int)(x * scale);
