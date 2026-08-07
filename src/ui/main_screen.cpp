@@ -48,6 +48,14 @@ namespace {
     Button zeroBtn{{THIRD_RIGHT_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "ZERO"};
 }
 
+void clearAllPositions() {
+    for (int i = 0; i < MAX_POSITIONS; i++) {
+        storedPositions[i].occupied = false;
+    }
+    selectedPosition = -1;
+    savePositions(storedPositions, MAX_POSITIONS, selectedPosition, POSITIONS_FILE_PATH);
+}
+
 ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
     initPositionButtons();
     
