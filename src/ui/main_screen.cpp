@@ -4,6 +4,7 @@
 #include "colors.h"
 #include "layout.h"
 #include "../excavator/excavator.h"
+#include "../config/config_file.h"
 #include <cstdio>
 #include <cmath>
 
@@ -16,15 +17,9 @@ namespace {
     constexpr int POS_BTN_HEIGHT = 60;
     constexpr int POS_BTN_Y = 10;
     
-    struct StoredPosition {
-        Sensor sensors[NUM_SENSORS];
-        double depth = 0;   // cached at capture time
-        double reach = 0;   // cached at capture time
-        bool occupied = false;
-    };
-    
     StoredPosition storedPositions[MAX_POSITIONS];
     int selectedPosition = -1;  // -1 = none selected
+    bool positionsLoaded = false;
     
     // Position slot buttons (A-F)
     Button positionBtns[MAX_POSITIONS];
@@ -32,6 +27,13 @@ namespace {
     
     void initPositionButtons() {
         if (positionBtnsInitialized) return;
+        
+        // Load saved positions on first init
+        if (!positionsLoaded) {
+            loadPositions(storedPositions, MAX_POSITIONS, &selectedPosition, POSITIONS_FILE_PATH);
+            positionsLoaded = true;
+        }
+        
         int totalWidth = MAX_POSITIONS * POS_BTN_WIDTH + (MAX_POSITIONS - 1) * GAP;
         int startX = (SCREEN_WIDTH - totalWidth) / 2;
         for (int i = 0; i < MAX_POSITIONS; i++) {
@@ -58,6 +60,7 @@ ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
             } else {
                 selectedPosition = i;
             }
+            savePositions(storedPositions, MAX_POSITIONS, selectedPosition, POSITIONS_FILE_PATH);
             return {Screen::MAIN, true};
         }
     }
@@ -92,6 +95,7 @@ ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
                 }
             }
         }
+        savePositions(storedPositions, MAX_POSITIONS, selectedPosition, POSITIONS_FILE_PATH);
         return {Screen::MAIN, true};
     }
     return {Screen::MAIN, false};
