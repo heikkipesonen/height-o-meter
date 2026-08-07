@@ -40,6 +40,12 @@ bool initFonts() {
         nullptr
     };
 
+    const char *monoFontPaths[] = {
+        "/usr/share/fonts/TTF/DejaVuSansMono-Bold.ttf",              // Arch
+        "/usr/share/fonts/truetype/dejavu/DejaVuSansMono-Bold.ttf",  // Debian
+        nullptr
+    };
+
     const char *foundPath = nullptr;
     for (int i = 0; fontPaths[i] != nullptr; i++) {
         FILE *f = fopen(fontPaths[i], "r");
@@ -65,11 +71,21 @@ bool initFonts() {
         }
     }
 
-    fontHuge = TTF_OpenFont(foundBoldPath ? foundBoldPath : foundPath, 120);
-    fontLarge = TTF_OpenFont(foundPath, 48);
-    fontMedium = TTF_OpenFont(foundPath, 28);
-    fontSmall = TTF_OpenFont(foundPath, 18);
-    fontButton = TTF_OpenFont(foundBoldPath ? foundBoldPath : foundPath, 28);
+    const char *foundMonoPath = nullptr;
+    for (int i = 0; monoFontPaths[i] != nullptr; i++) {
+        FILE *f = fopen(monoFontPaths[i], "r");
+        if (f) {
+            fclose(f);
+            foundMonoPath = monoFontPaths[i];
+            break;
+        }
+    }
+
+    fontHuge = TTF_OpenFont(foundMonoPath ? foundMonoPath : (foundBoldPath ? foundBoldPath : foundPath), 120);
+    fontLarge = TTF_OpenFont(foundMonoPath ? foundMonoPath : foundPath, 48);
+    fontMedium = TTF_OpenFont(foundMonoPath ? foundMonoPath : foundPath, 28);
+    fontSmall = TTF_OpenFont(foundMonoPath ? foundMonoPath : foundPath, 18);
+    fontButton = TTF_OpenFont(foundMonoPath ? foundMonoPath : (foundBoldPath ? foundBoldPath : foundPath), 28);
 
     return fontHuge && fontLarge && fontMedium && fontSmall && fontButton;
 }
