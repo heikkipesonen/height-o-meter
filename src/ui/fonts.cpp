@@ -65,7 +65,7 @@ bool initFonts() {
         }
     }
 
-    fontHuge = TTF_OpenFont(foundPath, 120);
+    fontHuge = TTF_OpenFont(foundBoldPath ? foundBoldPath : foundPath, 120);
     fontLarge = TTF_OpenFont(foundPath, 48);
     fontMedium = TTF_OpenFont(foundPath, 28);
     fontSmall = TTF_OpenFont(foundPath, 18);

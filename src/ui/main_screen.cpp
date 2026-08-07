@@ -199,7 +199,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
         }
         
         // Highlight color
-        SDL_SetRenderDrawColor(renderer, 100, 150, 255, 255);
+        SDL_SetRenderDrawColor(renderer, CIRCLE_ARC_COLOR.r, CIRCLE_ARC_COLOR.g, CIRCLE_ARC_COLOR.b, 255);
         for (int t = 0; t < thickness; t++) {
             int r = radius - t;
             for (double a = startAngle; (rotation >= 0 ? a <= endAngle : a <= endAngle); a += 0.5) {
@@ -241,11 +241,11 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     char depthStr[32];
     snprintf(depthStr, sizeof(depthStr), "%+d", depthCm);
     if (getFontHuge()) {
-        drawTextCentered(renderer, getFontHuge(), centerX - 140, centerY - 100, 280, 80, depthStr, {255, 255, 255, 255});
+        drawTextCentered(renderer, getFontHuge(), centerX - 140, centerY - 100, 280, 80, depthStr, TEXT_COLOR);
     }
     
     // Divider line
-    SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
+    SDL_SetRenderDrawColor(renderer, DIVIDER_COLOR.r, DIVIDER_COLOR.g, DIVIDER_COLOR.b, 255);
     SDL_RenderDrawLine(renderer, centerX - 120, centerY, centerX + 120, centerY);
     
     // Reach value (convert mm to cm)
@@ -253,7 +253,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     char reachStr[32];
     snprintf(reachStr, sizeof(reachStr), "%+d", reachCm);
     if (getFontHuge()) {
-        drawTextCentered(renderer, getFontHuge(), centerX - 140, centerY + 20, 280, 80, reachStr, {255, 255, 255, 255});
+        drawTextCentered(renderer, getFontHuge(), centerX - 140, centerY + 20, 280, 80, reachStr, TEXT_COLOR);
     }
     
     // Status dot
