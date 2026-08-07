@@ -119,31 +119,18 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state, const Excav
     
     // Draw position slot buttons
     for (int i = 0; i < MAX_POSITIONS; i++) {
-        SDL_Rect rect = positionBtns[i].rect;
-        SDL_FRect frect = {(float)rect.x, (float)rect.y, (float)rect.w, (float)rect.h};
-        
-        // Background color based on state
-        if (selectedPosition == i) {
-            // Selected - highlight
-            SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, 255);
-            SDL_RenderFillRect(renderer, &frect);
-        } else if (storedPositions[i].occupied) {
-            // Occupied - standard button color
-            SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, BTN_COLOR.a);
-            SDL_RenderFillRect(renderer, &frect);
-        } else {
-            // Empty slot - dimmed
-            SDL_SetRenderDrawColor(renderer, INACTIVE_COLOR.r, INACTIVE_COLOR.g, INACTIVE_COLOR.b, 255);
-            SDL_RenderFillRect(renderer, &frect);
-        }
-        
-        // Label
         char label[2] = {(char)('A' + i), '\0'};
-        if (getFontButton()) {
-            Color labelColor = storedPositions[i].occupied ? TEXT_COLOR : DIMMED_TEXT_COLOR;
-            if (selectedPosition == i) labelColor = {255, 255, 255, 255};
-            drawTextCentered(renderer, getFontButton(), rect.x, rect.y, rect.w, rect.h, label, labelColor);
+        positionBtns[i].label = label;
+        
+        // Set style based on state
+        if (selectedPosition == i) {
+            positionBtns[i].style = {ACCENT_COLOR, TEXT_COLOR};
+        } else if (storedPositions[i].occupied) {
+            positionBtns[i].style = {BTN_COLOR, TEXT_COLOR};
+        } else {
+            positionBtns[i].style = {INACTIVE_COLOR, DIMMED_TEXT_COLOR};
         }
+        positionBtns[i].draw(renderer);
     }
     
     double depth = state->depth;

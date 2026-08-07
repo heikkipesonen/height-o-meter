@@ -188,37 +188,18 @@ void renderNumpadScreen(SDL_Renderer *renderer) {
         drawTextCentered(renderer, getFontHuge(), MARGIN, 10, CONTENT_WIDTH, 110, displayBuf);
     }
     
-    // Number keys
+    // Number keys - set styles
     for (int i = 0; i < 12; i++) {
-        // Dim decimal point for integer mode
         if (i == 9 && numpadType == NumpadType::INTEGER) {
-            SDL_FRect frect = {(float)keyBtns[i].rect.x, (float)keyBtns[i].rect.y, 
-                              (float)keyBtns[i].rect.w, (float)keyBtns[i].rect.h};
-            SDL_SetRenderDrawColor(renderer, INACTIVE_COLOR.r, INACTIVE_COLOR.g, INACTIVE_COLOR.b, 255);
-            SDL_RenderFillRect(renderer, &frect);
-            if (getFontLarge()) {
-                drawTextCentered(renderer, getFontLarge(), keyBtns[i].rect.x, keyBtns[i].rect.y,
-                               keyBtns[i].rect.w, keyBtns[i].rect.h, keyLabels[i], DIMMED_TEXT_COLOR);
-            }
-        } else if (i == 11) {  // Backspace - red
-            SDL_FRect frect = {(float)keyBtns[i].rect.x, (float)keyBtns[i].rect.y, 
-                              (float)keyBtns[i].rect.w, (float)keyBtns[i].rect.h};
-            SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, 255);
-            SDL_RenderFillRect(renderer, &frect);
-            if (getFontLarge()) {
-                drawTextCentered(renderer, getFontLarge(), keyBtns[i].rect.x, keyBtns[i].rect.y,
-                               keyBtns[i].rect.w, keyBtns[i].rect.h, keyLabels[i]);
-            }
+            // Decimal point dimmed for integer mode
+            keyBtns[i].style = {INACTIVE_COLOR, DIMMED_TEXT_COLOR};
+        } else if (i == 11) {
+            // Backspace - red
+            keyBtns[i].style = {ACCENT_COLOR, TEXT_COLOR};
         } else {
-            SDL_FRect frect = {(float)keyBtns[i].rect.x, (float)keyBtns[i].rect.y, 
-                              (float)keyBtns[i].rect.w, (float)keyBtns[i].rect.h};
-            SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, 255);
-            SDL_RenderFillRect(renderer, &frect);
-            if (getFontLarge()) {
-                drawTextCentered(renderer, getFontLarge(), keyBtns[i].rect.x, keyBtns[i].rect.y,
-                               keyBtns[i].rect.w, keyBtns[i].rect.h, keyLabels[i]);
-            }
+            keyBtns[i].style = {BTN_COLOR, TEXT_COLOR};
         }
+        keyBtns[i].draw(renderer);
     }
     
     negBtn.draw(renderer);
