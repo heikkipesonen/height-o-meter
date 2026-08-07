@@ -46,6 +46,7 @@ namespace {
     Button visualizeBtn{{MARGIN, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "VIS"};
     Button sensorConfigBtn{{THIRD_CENTER_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "CFG"};
     Button zeroBtn{{THIRD_RIGHT_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "ZERO"};
+    Button bucketBtn{{MARGIN, BOTTOM_Y - BUTTON_HEIGHT - GAP, CONTENT_WIDTH, BUTTON_HEIGHT}, ""};
 }
 
 void clearAllPositions() {
@@ -56,7 +57,7 @@ void clearAllPositions() {
     savePositions(storedPositions, MAX_POSITIONS, selectedPosition, POSITIONS_FILE_PATH);
 }
 
-ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
+ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state, ExcavatorConfig *config) {
     initPositionButtons();
     
     // Position slot buttons
@@ -71,6 +72,10 @@ ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state) {
             savePositions(storedPositions, MAX_POSITIONS, selectedPosition, POSITIONS_FILE_PATH);
             return {Screen::MAIN, true};
         }
+    }
+    
+    if (bucketBtn.contains(tx, ty)) {
+        return {Screen::BUCKET, true};
     }
     
     if (visualizeBtn.contains(tx, ty)) {
@@ -298,6 +303,12 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state, const Excav
     SDL_SetRenderDrawColor(renderer, allConnected ? 0 : 255, allConnected ? 200 : 0, 0, 255);
     SDL_FRect statusDot = {(float)(SCREEN_WIDTH - 30), 10.0f, 20.0f, 20.0f};
     SDL_RenderFillRect(renderer, &statusDot);
+
+    // Bucket button
+    if (!config->buckets.empty()) {
+        bucketBtn.label = config->buckets[config->active_bucket].name;
+    }
+    bucketBtn.draw(renderer);
 
     visualizeBtn.draw(renderer);
     sensorConfigBtn.draw(renderer);

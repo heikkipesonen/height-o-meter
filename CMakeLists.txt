@@ -30,6 +30,8 @@ set(UI_SOURCES
     src/ui/visualize_screen.cpp
     src/ui/sensor_config_screen.cpp
     src/ui/sensor_edit_screen.cpp
+    src/ui/bucket_screen.cpp
+    src/ui/numpad_screen.cpp
 )
 
 add_executable(heightmatic

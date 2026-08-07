@@ -1,4 +1,5 @@
 #include "sensor_edit_screen.h"
+#include "numpad_screen.h"
 #include "button.h"
 #include "fonts.h"
 #include "colors.h"
@@ -16,6 +17,11 @@ namespace {
     // Numeric control layout helper
     constexpr int VALUE_BOX_WIDTH = 120;
     constexpr int VALUE_BOX_X = (SCREEN_WIDTH - VALUE_BOX_WIDTH) / 2;  // centered
+    
+    // Value box buttons for numpad entry
+    Button idValueBtn{{VALUE_BOX_X, 0, VALUE_BOX_WIDTH, 50}, ""};
+    Button offsetValueBtn{{VALUE_BOX_X, 0, VALUE_BOX_WIDTH, 50}, ""};
+    Button lengthValueBtn{{VALUE_BOX_X, 0, VALUE_BOX_WIDTH, 50}, ""};
     
     // Custom row positions for edit screen (more compact)
     constexpr int EDIT_ROW1 = 90;
@@ -169,6 +175,25 @@ ScreenResult handleSensorEditInput(int tx, int ty, ExcavatorState *state, Excava
         return {Screen::SENSOR_EDIT, true};
     }
     
+    // Value box taps - open numpad
+    idValueBtn.rect.y = EDIT_ROW1;
+    if (idValueBtn.contains(tx, ty)) {
+        openNumpad(Screen::SENSOR_EDIT, &s.id, nullptr, NumpadType::INTEGER, "Modbus ID");
+        return {Screen::NUMPAD, true};
+    }
+    
+    offsetValueBtn.rect.y = EDIT_ROW5;
+    if (offsetValueBtn.contains(tx, ty)) {
+        openNumpad(Screen::SENSOR_EDIT, nullptr, &s.offset, NumpadType::DECIMAL, "Offset");
+        return {Screen::NUMPAD, true};
+    }
+    
+    lengthValueBtn.rect.y = EDIT_ROW6;
+    if (lengthValueBtn.contains(tx, ty)) {
+        openNumpad(Screen::SENSOR_EDIT, &s.length_mm, nullptr, NumpadType::INTEGER, "Length (mm)");
+        return {Screen::NUMPAD, true};
+    }
+    
     return {Screen::SENSOR_EDIT, false};
 }
 
@@ -176,13 +201,11 @@ void drawToggleButton(SDL_Renderer *renderer, const Button &btn, const char *lab
     SDL_Rect rect = btn.rect;
     SDL_FRect frect = {(float)rect.x, (float)rect.y, (float)rect.w, (float)rect.h};
     if (active) {
-        SDL_SetRenderDrawColor(renderer, TOGGLE_ON_COLOR.r, TOGGLE_ON_COLOR.g, TOGGLE_ON_COLOR.b, 255);
+        SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, 255);
     } else {
-        SDL_SetRenderDrawColor(renderer, TOGGLE_OFF_COLOR.r, TOGGLE_OFF_COLOR.g, TOGGLE_OFF_COLOR.b, 255);
+        SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, 255);
     }
     SDL_RenderFillRect(renderer, &frect);
-    SDL_SetRenderDrawColor(renderer, BORDER_COLOR.r, BORDER_COLOR.g, BORDER_COLOR.b, 255);
-    SDL_RenderRect(renderer, &frect);
     if (getFontSmall()) {
         drawTextCentered(renderer, getFontSmall(), rect.x, rect.y, rect.w, rect.h, label);
     }
@@ -190,10 +213,8 @@ void drawToggleButton(SDL_Renderer *renderer, const Button &btn, const char *lab
 
 static void drawValueBox(SDL_Renderer *renderer, int y, const char *value) {
     SDL_FRect box = {(float)VALUE_BOX_X, (float)y, (float)VALUE_BOX_WIDTH, (float)EDIT_BTN_H};
-    SDL_SetRenderDrawColor(renderer, INPUT_BG_COLOR.r, INPUT_BG_COLOR.g, INPUT_BG_COLOR.b, 255);
+    SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, 255);
     SDL_RenderFillRect(renderer, &box);
-    SDL_SetRenderDrawColor(renderer, BORDER_COLOR.r, BORDER_COLOR.g, BORDER_COLOR.b, 255);
-    SDL_RenderRect(renderer, &box);
     if (getFontLarge()) {
         drawTextCentered(renderer, getFontLarge(), VALUE_BOX_X, y, VALUE_BOX_WIDTH, EDIT_BTN_H, value);
     }

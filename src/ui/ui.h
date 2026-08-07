@@ -9,7 +9,7 @@
 constexpr int DISPLAY_WIDTH = 800;
 constexpr int DISPLAY_HEIGHT = 480;
 
-enum class Screen { MAIN, SENSOR_SETUP, VISUALIZE, SENSOR_CONFIG, SENSOR_EDIT };
+enum class Screen { MAIN, SENSOR_SETUP, VISUALIZE, SENSOR_CONFIG, SENSOR_EDIT, BUCKET, NUMPAD };
 
 // Screen handler result
 struct ScreenResult {

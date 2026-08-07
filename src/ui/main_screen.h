@@ -6,5 +6,5 @@
 #include "ui.h"
 
 void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state, const ExcavatorConfig *config);
-ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state);
+ScreenResult handleMainInput(int tx, int ty, ExcavatorState *state, ExcavatorConfig *config);
 void clearAllPositions();

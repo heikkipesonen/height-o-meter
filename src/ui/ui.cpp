@@ -6,6 +6,8 @@
 #include "visualize_screen.h"
 #include "sensor_config_screen.h"
 #include "sensor_edit_screen.h"
+#include "bucket_screen.h"
+#include "numpad_screen.h"
 #include <cstdio>
 
 using namespace Layout;
@@ -79,7 +81,7 @@ void UI::handleInput(ExcavatorState *state) {
 
             switch (currentScreen) {
                 case Screen::MAIN:
-                    result = handleMainInput(tx, ty, state);
+                    result = handleMainInput(tx, ty, state, config);
                     break;
                 case Screen::SENSOR_SETUP:
                     result = handleSensorSetupInput(tx, ty, state);
@@ -92,6 +94,12 @@ void UI::handleInput(ExcavatorState *state) {
                     break;
                 case Screen::SENSOR_EDIT:
                     result = handleSensorEditInput(tx, ty, state, config);
+                    break;
+                case Screen::BUCKET:
+                    result = handleBucketInput(tx, ty, config);
+                    break;
+                case Screen::NUMPAD:
+                    result = handleNumpadInput(tx, ty);
                     break;
             }
 
@@ -131,6 +139,12 @@ void UI::render(ExcavatorState *state) {
             break;
         case Screen::SENSOR_EDIT:
             renderSensorEditScreen(renderer, state, config);
+            break;
+        case Screen::BUCKET:
+            renderBucketScreen(renderer, config);
+            break;
+        case Screen::NUMPAD:
+            renderNumpadScreen(renderer);
             break;
     }
 
