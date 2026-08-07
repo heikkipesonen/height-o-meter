@@ -115,20 +115,21 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     // Draw position slot buttons
     for (int i = 0; i < MAX_POSITIONS; i++) {
         SDL_Rect rect = positionBtns[i].rect;
+        SDL_FRect frect = {(float)rect.x, (float)rect.y, (float)rect.w, (float)rect.h};
         
         // Background color based on state
         if (selectedPosition == i) {
             // Selected - highlight
             SDL_SetRenderDrawColor(renderer, ACCENT_COLOR.r, ACCENT_COLOR.g, ACCENT_COLOR.b, 255);
-            SDL_RenderFillRect(renderer, &rect);
+            SDL_RenderFillRect(renderer, &frect);
         } else if (storedPositions[i].occupied) {
             // Occupied - standard button color
             SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, BTN_COLOR.a);
-            SDL_RenderFillRect(renderer, &rect);
+            SDL_RenderFillRect(renderer, &frect);
         } else {
             // Empty slot - dimmed
             SDL_SetRenderDrawColor(renderer, INACTIVE_COLOR.r, INACTIVE_COLOR.g, INACTIVE_COLOR.b, 255);
-            SDL_RenderFillRect(renderer, &rect);
+            SDL_RenderFillRect(renderer, &frect);
         }
         
         // Label
@@ -184,7 +185,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
                 double angle = i * M_PI / 180.0;
                 int x = centerX + (int)(cos(angle) * r);
                 int y = centerY + (int)(sin(angle) * r);
-                SDL_RenderDrawPoint(renderer, x, y);
+                SDL_RenderPoint(renderer, x, y);
             }
         }
         
@@ -206,7 +207,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
                 double angle = a * M_PI / 180.0;
                 int x = centerX + (int)(cos(angle) * r);
                 int y = centerY + (int)(sin(angle) * r);
-                SDL_RenderDrawPoint(renderer, x, y);
+                SDL_RenderPoint(renderer, x, y);
                 if (rotation < 0 && a >= startAngle) break;
             }
             // Proper arc drawing
@@ -216,21 +217,21 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
                     double angle = a * M_PI / 180.0;
                     int x = centerX + (int)(cos(angle) * r);
                     int y = centerY + (int)(sin(angle) * r);
-                    SDL_RenderDrawPoint(renderer, x, y);
+                    SDL_RenderPoint(renderer, x, y);
                 }
             } else {
                 for (double a = startAngle; a <= endAngle; a += step) {
                     double angle = a * M_PI / 180.0;
                     int x = centerX + (int)(cos(angle) * r);
                     int y = centerY + (int)(sin(angle) * r);
-                    SDL_RenderDrawPoint(renderer, x, y);
+                    SDL_RenderPoint(renderer, x, y);
                 }
             }
         }
         
         // Draw marker at top (zero position)
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_Rect marker = {centerX - 3, centerY - radius - 8, 6, 16};
+        SDL_FRect marker = {(float)(centerX - 3), (float)(centerY - radius - 8), 6.0f, 16.0f};
         SDL_RenderFillRect(renderer, &marker);
     }
     
@@ -246,7 +247,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     
     // Divider line
     SDL_SetRenderDrawColor(renderer, DIVIDER_COLOR.r, DIVIDER_COLOR.g, DIVIDER_COLOR.b, 255);
-    SDL_RenderDrawLine(renderer, centerX - 120, centerY, centerX + 120, centerY);
+    SDL_RenderLine(renderer, centerX - 120, centerY, centerX + 120, centerY);
     
     // Reach value (convert mm to cm)
     int reachCm = (int)reach / 10;
@@ -265,7 +266,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
         }
     }
     SDL_SetRenderDrawColor(renderer, allConnected ? 0 : 255, allConnected ? 200 : 0, 0, 255);
-    SDL_Rect statusDot = {SCREEN_WIDTH - 30, 10, 20, 20};
+    SDL_FRect statusDot = {(float)(SCREEN_WIDTH - 30), 10.0f, 20.0f, 20.0f};
     SDL_RenderFillRect(renderer, &statusDot);
 
     visualizeBtn.draw(renderer);

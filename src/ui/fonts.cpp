@@ -17,8 +17,8 @@ TTF_Font* getFontSmall() { return fontSmall; }
 TTF_Font* getFontButton() { return fontButton; }
 
 bool initFonts() {
-    if (TTF_Init() < 0) {
-        printf("TTF init failed: %s\n", TTF_GetError());
+    if (!TTF_Init()) {
+        printf("TTF init failed: %s\n", SDL_GetError());
         return false;
     }
 
@@ -101,41 +101,41 @@ void closeFonts() {
 
 void drawText(SDL_Renderer *renderer, TTF_Font *font, int x, int y, const char *text, Color color) {
     SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
-    SDL_Surface *surface = TTF_RenderText_Blended(font, text, sdlColor);
+    SDL_Surface *surface = TTF_RenderText_Blended(font, text, 0, sdlColor);
     if (!surface) return;
 
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (!texture) {
-        SDL_FreeSurface(surface);
+        SDL_DestroySurface(surface);
         return;
     }
 
-    SDL_Rect dest = {x, y, surface->w, surface->h};
-    SDL_RenderCopy(renderer, texture, nullptr, &dest);
+    SDL_FRect dest = {(float)x, (float)y, (float)surface->w, (float)surface->h};
+    SDL_RenderTexture(renderer, texture, nullptr, &dest);
 
     SDL_DestroyTexture(texture);
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
 }
 
 void drawTextCentered(SDL_Renderer *renderer, TTF_Font *font, int x, int y, int w, int h, const char *text, Color color) {
     SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
-    SDL_Surface *surface = TTF_RenderText_Blended(font, text, sdlColor);
+    SDL_Surface *surface = TTF_RenderText_Blended(font, text, 0, sdlColor);
     if (!surface) return;
 
     SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
     if (!texture) {
-        SDL_FreeSurface(surface);
+        SDL_DestroySurface(surface);
         return;
     }
 
-    SDL_Rect dest = {
-        x + (w - surface->w) / 2,
-        y + (h - surface->h) / 2,
-        surface->w,
-        surface->h
+    SDL_FRect dest = {
+        (float)(x + (w - surface->w) / 2),
+        (float)(y + (h - surface->h) / 2),
+        (float)surface->w,
+        (float)surface->h
     };
-    SDL_RenderCopy(renderer, texture, nullptr, &dest);
+    SDL_RenderTexture(renderer, texture, nullptr, &dest);
 
     SDL_DestroyTexture(texture);
-    SDL_FreeSurface(surface);
+    SDL_DestroySurface(surface);
 }

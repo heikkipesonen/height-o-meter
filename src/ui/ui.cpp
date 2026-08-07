@@ -21,7 +21,7 @@ UI::~UI() {
 }
 
 bool UI::init() {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+    if (!SDL_Init(SDL_INIT_VIDEO)) {
         printf("SDL init failed: %s\n", SDL_GetError());
         return false;
     }
@@ -32,9 +32,8 @@ bool UI::init() {
 
     window = SDL_CreateWindow(
         "Height-O-Meter",
-        SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         DISPLAY_WIDTH, DISPLAY_HEIGHT,
-        SDL_WINDOW_SHOWN
+        0
     );
 
     if (!window) {
@@ -42,10 +41,7 @@ bool UI::init() {
         return false;
     }
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_TARGETTEXTURE);
-    if (!renderer) {
-        renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_SOFTWARE | SDL_RENDERER_TARGETTEXTURE);
-    }
+    renderer = SDL_CreateRenderer(window, nullptr);
 
     if (!renderer) {
         return false;
@@ -69,11 +65,11 @@ bool UI::init() {
 void UI::handleInput(ExcavatorState *state) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_QUIT) {
+        if (e.type == SDL_EVENT_QUIT) {
             state->running = false;
         }
 
-        if (e.type == SDL_FINGERDOWN) {
+        if (e.type == SDL_EVENT_FINGER_DOWN) {
             // Window is 800x480, logical is 480x800 rotated 90° CW
             // Physical top-left -> logical bottom-left
             int tx = (int)(e.tfinger.y * SCREEN_WIDTH);
@@ -104,10 +100,10 @@ void UI::handleInput(ExcavatorState *state) {
             }
         }
 
-        if (e.type == SDL_KEYDOWN) {
-            if (e.key.keysym.sym == SDLK_q) {
+        if (e.type == SDL_EVENT_KEY_DOWN) {
+            if (e.key.key == SDLK_Q) {
                 state->running = false;
-            } else if (e.key.keysym.sym == SDLK_ESCAPE) {
+            } else if (e.key.key == SDLK_ESCAPE) {
                 currentScreen = Screen::MAIN;
             }
         }
@@ -139,12 +135,11 @@ void UI::render(ExcavatorState *state) {
     }
 
     // Blit texture to screen (rotated 90° clockwise)
-    // destRect defines where texture is placed, then rotated around center
-    // We want 480x800 texture to end up filling 800x480 screen after 90° rotation
     SDL_SetRenderTarget(renderer, nullptr);
-    SDL_Rect destRect = {(DISPLAY_WIDTH - SCREEN_WIDTH) / 2, (DISPLAY_HEIGHT - SCREEN_HEIGHT) / 2, SCREEN_WIDTH, SCREEN_HEIGHT};
-    SDL_Point center = {SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2};
-    SDL_RenderCopyEx(renderer, renderTarget, nullptr, &destRect, 90.0, &center, SDL_FLIP_NONE);
+    SDL_FRect destRect = {(float)(DISPLAY_WIDTH - SCREEN_WIDTH) / 2, (float)(DISPLAY_HEIGHT - SCREEN_HEIGHT) / 2, (float)SCREEN_WIDTH, (float)SCREEN_HEIGHT};
+    SDL_FPoint center = {(float)SCREEN_WIDTH / 2, (float)SCREEN_HEIGHT / 2};
+    SDL_RenderTextureRotated(renderer, renderTarget, nullptr, &destRect, 90.0, &center, SDL_FLIP_NONE);
+    
     SDL_RenderPresent(renderer);
 }
 

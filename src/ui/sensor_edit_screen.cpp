@@ -165,25 +165,26 @@ ScreenResult handleSensorEditInput(int tx, int ty, ExcavatorState *state, Excava
 
 void drawToggleButton(SDL_Renderer *renderer, const Button &btn, const char *label, bool active) {
     SDL_Rect rect = btn.rect;
+    SDL_FRect frect = {(float)rect.x, (float)rect.y, (float)rect.w, (float)rect.h};
     if (active) {
         SDL_SetRenderDrawColor(renderer, TOGGLE_ON_COLOR.r, TOGGLE_ON_COLOR.g, TOGGLE_ON_COLOR.b, 255);
     } else {
         SDL_SetRenderDrawColor(renderer, TOGGLE_OFF_COLOR.r, TOGGLE_OFF_COLOR.g, TOGGLE_OFF_COLOR.b, 255);
     }
-    SDL_RenderFillRect(renderer, &rect);
+    SDL_RenderFillRect(renderer, &frect);
     SDL_SetRenderDrawColor(renderer, BORDER_COLOR.r, BORDER_COLOR.g, BORDER_COLOR.b, 255);
-    SDL_RenderDrawRect(renderer, &rect);
+    SDL_RenderRect(renderer, &frect);
     if (getFontSmall()) {
         drawTextCentered(renderer, getFontSmall(), rect.x, rect.y, rect.w, rect.h, label);
     }
 }
 
 static void drawValueBox(SDL_Renderer *renderer, int y, const char *value) {
-    SDL_Rect box = {VALUE_BOX_X, y, VALUE_BOX_WIDTH, BUTTON_HEIGHT};
+    SDL_FRect box = {(float)VALUE_BOX_X, (float)y, (float)VALUE_BOX_WIDTH, (float)BUTTON_HEIGHT};
     SDL_SetRenderDrawColor(renderer, INPUT_BG_COLOR.r, INPUT_BG_COLOR.g, INPUT_BG_COLOR.b, 255);
     SDL_RenderFillRect(renderer, &box);
     SDL_SetRenderDrawColor(renderer, BORDER_COLOR.r, BORDER_COLOR.g, BORDER_COLOR.b, 255);
-    SDL_RenderDrawRect(renderer, &box);
+    SDL_RenderRect(renderer, &box);
     if (getFontLarge()) {
         drawTextCentered(renderer, getFontLarge(), VALUE_BOX_X, y, VALUE_BOX_WIDTH, BUTTON_HEIGHT, value);
     }

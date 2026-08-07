@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include "colors.h"
 #include "fonts.h"
 
@@ -15,7 +15,8 @@ struct Button {
 
     void draw(SDL_Renderer *renderer) const {
         SDL_SetRenderDrawColor(renderer, BTN_COLOR.r, BTN_COLOR.g, BTN_COLOR.b, BTN_COLOR.a);
-        SDL_RenderFillRect(renderer, &rect);
+        SDL_FRect frect = {(float)rect.x, (float)rect.y, (float)rect.w, (float)rect.h};
+        SDL_RenderFillRect(renderer, &frect);
 
         if (getFontButton()) {
             drawTextCentered(renderer, getFontButton(), rect.x, rect.y, rect.w, rect.h, label, {255, 255, 255, 255});

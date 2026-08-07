@@ -5,6 +5,7 @@
 #include "layout.h"
 #include "src/excavator/excavator.h"
 #include <cmath>
+#include <cstdio>
 
 using namespace Layout;
 
@@ -34,7 +35,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     
     // Draw ground line
     SDL_SetRenderDrawColor(renderer, GROUND_COLOR.r, GROUND_COLOR.g, GROUND_COLOR.b, 255);
-    SDL_RenderDrawLine(renderer, 0, groundY, SCREEN_WIDTH, groundY);
+    SDL_RenderLine(renderer, 0, groundY, SCREEN_WIDTH, groundY);
     
     // Get superstructure tilt (machine lean)
     const Sensor &superSensor = state->sensors[SENSOR_SUPERSTRUCTURE];
@@ -68,7 +69,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         float x2 = corners[next][0] * std::cos(superRad) - corners[next][1] * std::sin(superRad);
         float y2 = corners[next][0] * std::sin(superRad) + corners[next][1] * std::cos(superRad);
         
-        SDL_RenderDrawLine(renderer, 
+        SDL_RenderLine(renderer, 
             pivotX + (int)(x1 * scale), pivotY - (int)(y1 * scale),
             pivotX + (int)(x2 * scale), pivotY - (int)(y2 * scale));
     }
@@ -86,7 +87,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     
     // Draw pivot to boom pin
     SDL_SetRenderDrawColor(renderer, PIVOT_COLOR.r, PIVOT_COLOR.g, PIVOT_COLOR.b, 255);
-    SDL_RenderDrawLine(renderer, pivotX, pivotY, prevScreenX, prevScreenY);
+    SDL_RenderLine(renderer, pivotX, pivotY, prevScreenX, prevScreenY);
     
     // Colors for each segment
     SDL_Color colors[] = {
@@ -126,9 +127,9 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         int screenY = pivotY - (int)(y * scale);
         
         SDL_SetRenderDrawColor(renderer, colors[i].r, colors[i].g, colors[i].b, 255);
-        SDL_RenderDrawLine(renderer, prevScreenX, prevScreenY, screenX, screenY);
-        SDL_RenderDrawLine(renderer, prevScreenX+1, prevScreenY, screenX+1, screenY);
-        SDL_RenderDrawLine(renderer, prevScreenX, prevScreenY+1, screenX, screenY+1);
+        SDL_RenderLine(renderer, prevScreenX, prevScreenY, screenX, screenY);
+        SDL_RenderLine(renderer, prevScreenX+1, prevScreenY, screenX+1, screenY);
+        SDL_RenderLine(renderer, prevScreenX, prevScreenY+1, screenX, screenY+1);
         
         prevScreenX = screenX;
         prevScreenY = screenY;
@@ -136,7 +137,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     
     // Bucket tip marker
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-    SDL_Rect tip = {prevScreenX - 4, prevScreenY - 4, 8, 8};
+    SDL_FRect tip = {(float)(prevScreenX - 4), (float)(prevScreenY - 4), 8.0f, 8.0f};
     SDL_RenderFillRect(renderer, &tip);
     
     // Debug info below visualization

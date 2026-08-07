@@ -64,6 +64,7 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
         const Sensor &sensor = state->sensors[i];
         
         SDL_Rect rect = sensorBtns[i].rect;
+        SDL_FRect frect = {(float)rect.x, (float)rect.y, (float)rect.w, (float)rect.h};
         
         // Background color based on connection
         if (sensor.connected) {
@@ -71,9 +72,9 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
         } else {
             SDL_SetRenderDrawColor(renderer, LIST_ITEM_ERROR_COLOR.r, LIST_ITEM_ERROR_COLOR.g, LIST_ITEM_ERROR_COLOR.b, 255);
         }
-        SDL_RenderFillRect(renderer, &rect);
+        SDL_RenderFillRect(renderer, &frect);
         SDL_SetRenderDrawColor(renderer, LIST_ITEM_BORDER_COLOR.r, LIST_ITEM_BORDER_COLOR.g, LIST_ITEM_BORDER_COLOR.b, 255);
-        SDL_RenderDrawRect(renderer, &rect);
+        SDL_RenderRect(renderer, &frect);
         
         if (getFontSmall()) {
             // Single line: Name ID  X:val Y:val  status
