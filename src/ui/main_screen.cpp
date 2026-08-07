@@ -218,15 +218,15 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state, const Excav
         int barThickness = bgThickness;  // Same as circle
         int indicatorSize = 20;
         
-        // Get roll and pitch based on config axis
-        double rollAngle = (superCfg.axis == MountAxis::X) ? superSensor.x : superSensor.y;
-        double pitchAngle = (superCfg.axis == MountAxis::X) ? superSensor.y : superSensor.x;
+        // Get X and Y angles - config axis is used for Y bar, other axis for X bar
+        double xAngle = (superCfg.axis == MountAxis::X) ? superSensor.y : superSensor.x;
+        double yAngle = (superCfg.axis == MountAxis::X) ? superSensor.x : superSensor.y;
         if (superCfg.inverted) {
-            rollAngle = -rollAngle;
-            pitchAngle = -pitchAngle;
+            xAngle = -xAngle;
+            yAngle = -yAngle;
         }
         
-        // X bar (roll - left/right) - horizontal below circle
+        // X bar (horizontal below circle)
         int xBarX = centerX - barLength / 2;
         int xBarY = centerY + radius + 20;
         
@@ -236,16 +236,16 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state, const Excav
         SDL_RenderFillRect(renderer, &xBarBg);
         
         // Indicator position (clamp to bar range)
-        double rollPos = rollAngle / 15.0;  // Normalize to -1..1 for ±15°
-        if (rollPos < -1) rollPos = -1;
-        if (rollPos > 1) rollPos = 1;
-        int xIndicatorX = centerX + (int)(rollPos * (barLength / 2 - indicatorSize / 2)) - indicatorSize / 2;
+        double xPos = xAngle / 15.0;  // Normalize to -1..1 for ±15°
+        if (xPos < -1) xPos = -1;
+        if (xPos > 1) xPos = 1;
+        int xIndicatorX = centerX + (int)(xPos * (barLength / 2 - indicatorSize / 2)) - indicatorSize / 2;
         
         SDL_SetRenderDrawColor(renderer, CIRCLE_ARC_COLOR.r, CIRCLE_ARC_COLOR.g, CIRCLE_ARC_COLOR.b, 255);
         SDL_FRect xIndicator = {(float)xIndicatorX, (float)xBarY, (float)indicatorSize, (float)barThickness};
         SDL_RenderFillRect(renderer, &xIndicator);
         
-        // Y bar (pitch - front/back) - vertical on left of circle
+        // Y bar (vertical on left of circle)
         int yBarX = centerX - radius - 20 - barThickness;
         int yBarY = centerY - barLength / 2;
         
@@ -255,10 +255,10 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state, const Excav
         SDL_RenderFillRect(renderer, &yBarBg);
         
         // Indicator position
-        double pitchPos = pitchAngle / 15.0;  // ±15°
-        if (pitchPos < -1) pitchPos = -1;
-        if (pitchPos > 1) pitchPos = 1;
-        int yIndicatorY = centerY + (int)(pitchPos * (barLength / 2 - indicatorSize / 2)) - indicatorSize / 2;
+        double yPos = yAngle / 15.0;  // ±15°
+        if (yPos < -1) yPos = -1;
+        if (yPos > 1) yPos = 1;
+        int yIndicatorY = centerY + (int)(yPos * (barLength / 2 - indicatorSize / 2)) - indicatorSize / 2;
         
         SDL_SetRenderDrawColor(renderer, CIRCLE_ARC_COLOR.r, CIRCLE_ARC_COLOR.g, CIRCLE_ARC_COLOR.b, 255);
         SDL_FRect yIndicator = {(float)yBarX, (float)yIndicatorY, (float)barThickness, (float)indicatorSize};

@@ -37,7 +37,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     SDL_SetRenderDrawColor(renderer, GROUND_COLOR.r, GROUND_COLOR.g, GROUND_COLOR.b, 255);
     SDL_RenderLine(renderer, 0, groundY, SCREEN_WIDTH, groundY);
     
-    // Get superstructure tilt (machine lean)
+    // Get superstructure tilt for visualization
     const Sensor &superSensor = state->sensors[SENSOR_SUPERSTRUCTURE];
     const SensorConfig &superCfg = config->sensors[SENSOR_SUPERSTRUCTURE];
     double superTilt = 0;
@@ -140,7 +140,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     SDL_FRect tip = {(float)(prevScreenX - 4), (float)(prevScreenY - 4), 8.0f, 8.0f};
     SDL_RenderFillRect(renderer, &tip);
     
-    // Debug info below visualization
+    // Debug info below visualization - table layout
     if (getFontSmall()) {
         char buf[64];
         const Sensor &sA = state->sensors[SENSOR_BOOM_A];
@@ -148,25 +148,36 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
         const Sensor &sS = state->sensors[SENSOR_STICK];
         const Sensor &sT = state->sensors[SENSOR_CURL_TILT];
         
-        int textY = drawAreaY + drawAreaH + 20;
+        int textY = drawAreaY + drawAreaH + 10;
+        int rowH = 22;
+        int col1 = MARGIN;
+        int col2 = MARGIN + 150;
+        int col3 = MARGIN + 300;
         
-        snprintf(buf, sizeof(buf), "Super: %.1f", superTilt);
-        drawTextCentered(renderer, getFontSmall(), 0, textY, SCREEN_WIDTH/2, 25, buf);
+        // Row 1: Super, A, B
+        snprintf(buf, sizeof(buf), "Super: %+.1f", superTilt);
+        drawText(renderer, getFontSmall(), col1, textY, buf);
+        snprintf(buf, sizeof(buf), "A: %+.1f", getSensorAngle(sA, config->sensors[SENSOR_BOOM_A]));
+        drawText(renderer, getFontSmall(), col2, textY, buf);
+        snprintf(buf, sizeof(buf), "B: %+.1f", getSensorAngle(sB, config->sensors[SENSOR_BOOM_B]));
+        drawText(renderer, getFontSmall(), col3, textY, buf);
         
-        snprintf(buf, sizeof(buf), "A: %.1f  B: %.1f", getSensorAngle(sA, config->sensors[SENSOR_BOOM_A]), 
-                 getSensorAngle(sB, config->sensors[SENSOR_BOOM_B]));
-        drawTextCentered(renderer, getFontSmall(), SCREEN_WIDTH/2, textY, SCREEN_WIDTH/2, 25, buf);
+        // Row 2: Stick, Curl, Tilt
+        snprintf(buf, sizeof(buf), "Stick: %+.1f", getSensorAngle(sS, config->sensors[SENSOR_STICK]));
+        drawText(renderer, getFontSmall(), col1, textY + rowH, buf);
+        snprintf(buf, sizeof(buf), "Curl: %+.1f", getSensorAngle(sT, config->sensors[SENSOR_CURL_TILT]));
+        drawText(renderer, getFontSmall(), col2, textY + rowH, buf);
+        // Tilt is the other axis from config
+        const SensorConfig &tiltCfg = config->sensors[SENSOR_CURL_TILT];
+        double tiltAngle = (tiltCfg.axis == MountAxis::X) ? sT.y : sT.x;
+        snprintf(buf, sizeof(buf), "Tilt: %+.1f", tiltAngle);
+        drawText(renderer, getFontSmall(), col3, textY + rowH, buf);
         
-        snprintf(buf, sizeof(buf), "Stick: %.1f  Curl: %.1f", getSensorAngle(sS, config->sensors[SENSOR_STICK]),
-                 getSensorAngle(sT, config->sensors[SENSOR_CURL_TILT]));
-        drawTextCentered(renderer, getFontSmall(), 0, textY + 25, SCREEN_WIDTH, 25, buf);
-        
-        // Show sideways tilt from Y axis
-        snprintf(buf, sizeof(buf), "Tilt: %.1f", sT.y);
-        drawTextCentered(renderer, getFontSmall(), 0, textY + 50, SCREEN_WIDTH/2, 25, buf);
-        
-        snprintf(buf, sizeof(buf), "D: %d  R: %d", (int)state->depth, (int)state->reach);
-        drawTextCentered(renderer, getFontSmall(), SCREEN_WIDTH/2, textY + 50, SCREEN_WIDTH/2, 25, buf);
+        // Row 3: Depth, Reach
+        snprintf(buf, sizeof(buf), "Depth: %+d", (int)state->depth);
+        drawText(renderer, getFontSmall(), col1, textY + rowH * 2, buf);
+        snprintf(buf, sizeof(buf), "Reach: %+d", (int)state->reach);
+        drawText(renderer, getFontSmall(), col2, textY + rowH * 2, buf);
     }
     
     backBtn.draw(renderer);

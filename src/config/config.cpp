@@ -16,7 +16,7 @@ ExcavatorConfig getConfig() {
   // Sensor 0: Superstructure (cab rotation)
   config.sensors[0].id = 1;
   config.sensors[0].name = "Superstructure";
-  config.sensors[0].axis = MountAxis::Y;
+  config.sensors[0].axis = MountAxis::X;
   config.sensors[0].inverted = true;
   config.sensors[0].length_mm = 0;
 

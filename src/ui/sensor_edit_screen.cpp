@@ -17,35 +17,44 @@ namespace {
     constexpr int VALUE_BOX_WIDTH = 120;
     constexpr int VALUE_BOX_X = (SCREEN_WIDTH - VALUE_BOX_WIDTH) / 2;  // centered
     
+    // Custom row positions for edit screen (more compact)
+    constexpr int EDIT_ROW1 = 90;
+    constexpr int EDIT_ROW2 = 170;
+    constexpr int EDIT_ROW3 = 250;
+    constexpr int EDIT_ROW4 = 330;
+    constexpr int EDIT_ROW5 = 410;
+    constexpr int EDIT_ROW6 = 490;
+    constexpr int EDIT_BTN_H = 50;
+    
     // ID controls - ROW1
-    Button idMinus{{MARGIN, ROW1_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "-"};
-    Button idMinus10{{MARGIN + SMALL_BTN_WIDTH + GAP, ROW1_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "-10"};
-    Button idPlus10{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, ROW1_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "+10"};
-    Button idPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, ROW1_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "+"};
+    Button idMinus{{MARGIN, EDIT_ROW1, SMALL_BTN_WIDTH, EDIT_BTN_H}, "-"};
+    Button idMinus10{{MARGIN + SMALL_BTN_WIDTH + GAP, EDIT_ROW1, MED_BTN_WIDTH, EDIT_BTN_H}, "-10"};
+    Button idPlus10{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, EDIT_ROW1, MED_BTN_WIDTH, EDIT_BTN_H}, "+10"};
+    Button idPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, EDIT_ROW1, SMALL_BTN_WIDTH, EDIT_BTN_H}, "+"};
     
     // Axis toggle - ROW2
-    Button axisX{{MARGIN, ROW2_Y, HALF_WIDTH, BUTTON_HEIGHT}, "X (Roll)"};
-    Button axisY{{RIGHT_HALF_X, ROW2_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Y (Pitch)"};
+    Button axisX{{MARGIN, EDIT_ROW2, HALF_WIDTH, EDIT_BTN_H}, "X"};
+    Button axisY{{RIGHT_HALF_X, EDIT_ROW2, HALF_WIDTH, EDIT_BTN_H}, "Y"};
     
     // Inverted toggle - ROW3
-    Button invertedOn{{MARGIN, ROW3_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Inverted"};
-    Button invertedOff{{RIGHT_HALF_X, ROW3_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Normal"};
+    Button invertedOn{{MARGIN, EDIT_ROW3, HALF_WIDTH, EDIT_BTN_H}, "Inverted"};
+    Button invertedOff{{RIGHT_HALF_X, EDIT_ROW3, HALF_WIDTH, EDIT_BTN_H}, "Normal"};
     
     // Points down toggle - ROW4
-    Button pointsDownOn{{MARGIN, ROW4_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Points Down"};
-    Button pointsDownOff{{RIGHT_HALF_X, ROW4_Y, HALF_WIDTH, BUTTON_HEIGHT}, "Points Up"};
+    Button pointsDownOn{{MARGIN, EDIT_ROW4, HALF_WIDTH, EDIT_BTN_H}, "Down"};
+    Button pointsDownOff{{RIGHT_HALF_X, EDIT_ROW4, HALF_WIDTH, EDIT_BTN_H}, "Up"};
     
     // Offset controls - ROW5
-    Button offsetMinus{{MARGIN, ROW5_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "-1"};
-    Button offsetMinusFine{{MARGIN + SMALL_BTN_WIDTH + GAP, ROW5_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "-0.1"};
-    Button offsetPlusFine{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, ROW5_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "+0.1"};
-    Button offsetPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, ROW5_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "+1"};
+    Button offsetMinus{{MARGIN, EDIT_ROW5, SMALL_BTN_WIDTH, EDIT_BTN_H}, "-1"};
+    Button offsetMinusFine{{MARGIN + SMALL_BTN_WIDTH + GAP, EDIT_ROW5, MED_BTN_WIDTH, EDIT_BTN_H}, "-.1"};
+    Button offsetPlusFine{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, EDIT_ROW5, MED_BTN_WIDTH, EDIT_BTN_H}, "+.1"};
+    Button offsetPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, EDIT_ROW5, SMALL_BTN_WIDTH, EDIT_BTN_H}, "+1"};
     
     // Length controls - ROW6
-    Button lengthMinus{{MARGIN, ROW6_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "-1"};
-    Button lengthMinus10{{MARGIN + SMALL_BTN_WIDTH + GAP, ROW6_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "-10"};
-    Button lengthPlus10{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, ROW6_Y, MED_BTN_WIDTH, BUTTON_HEIGHT}, "+10"};
-    Button lengthPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, ROW6_Y, SMALL_BTN_WIDTH, BUTTON_HEIGHT}, "+1"};
+    Button lengthMinus{{MARGIN, EDIT_ROW6, SMALL_BTN_WIDTH, EDIT_BTN_H}, "-1"};
+    Button lengthMinus10{{MARGIN + SMALL_BTN_WIDTH + GAP, EDIT_ROW6, MED_BTN_WIDTH, EDIT_BTN_H}, "-10"};
+    Button lengthPlus10{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH - GAP - MED_BTN_WIDTH, EDIT_ROW6, MED_BTN_WIDTH, EDIT_BTN_H}, "+10"};
+    Button lengthPlus{{SCREEN_WIDTH - MARGIN - SMALL_BTN_WIDTH, EDIT_ROW6, SMALL_BTN_WIDTH, EDIT_BTN_H}, "+1"};
     
     Button backBtn{{MARGIN, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "Back"};
     Button saveBtn{{THIRD_RIGHT_X, BOTTOM_Y, THIRD_WIDTH, BUTTON_HEIGHT}, "Save"};
@@ -180,13 +189,13 @@ void drawToggleButton(SDL_Renderer *renderer, const Button &btn, const char *lab
 }
 
 static void drawValueBox(SDL_Renderer *renderer, int y, const char *value) {
-    SDL_FRect box = {(float)VALUE_BOX_X, (float)y, (float)VALUE_BOX_WIDTH, (float)BUTTON_HEIGHT};
+    SDL_FRect box = {(float)VALUE_BOX_X, (float)y, (float)VALUE_BOX_WIDTH, (float)EDIT_BTN_H};
     SDL_SetRenderDrawColor(renderer, INPUT_BG_COLOR.r, INPUT_BG_COLOR.g, INPUT_BG_COLOR.b, 255);
     SDL_RenderFillRect(renderer, &box);
     SDL_SetRenderDrawColor(renderer, BORDER_COLOR.r, BORDER_COLOR.g, BORDER_COLOR.b, 255);
     SDL_RenderRect(renderer, &box);
     if (getFontLarge()) {
-        drawTextCentered(renderer, getFontLarge(), VALUE_BOX_X, y, VALUE_BOX_WIDTH, BUTTON_HEIGHT, value);
+        drawTextCentered(renderer, getFontLarge(), VALUE_BOX_X, y, VALUE_BOX_WIDTH, EDIT_BTN_H, value);
     }
 }
 
@@ -216,58 +225,58 @@ void renderSensorEditScreen(SDL_Renderer *renderer, ExcavatorState *state, Excav
     
     // ID section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), MARGIN, ROW1_Y - 25, "Modbus ID:");
+        drawText(renderer, getFontSmall(), MARGIN, EDIT_ROW1 - 25, "Modbus ID:");
     }
     idMinus.draw(renderer);
     idMinus10.draw(renderer);
     char idBuf[8];
     snprintf(idBuf, sizeof(idBuf), "%d", cfg.id);
-    drawValueBox(renderer, ROW1_Y, idBuf);
+    drawValueBox(renderer, EDIT_ROW1, idBuf);
     idPlus10.draw(renderer);
     idPlus.draw(renderer);
     
     // Axis section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), MARGIN, ROW2_Y - 25, "Axis:");
+        drawText(renderer, getFontSmall(), MARGIN, EDIT_ROW2 - 25, "Axis:");
     }
     drawToggleButton(renderer, axisX, "X (Roll)", cfg.axis == MountAxis::X);
     drawToggleButton(renderer, axisY, "Y (Pitch)", cfg.axis == MountAxis::Y);
     
     // Inverted section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), MARGIN, ROW3_Y - 25, "Direction:");
+        drawText(renderer, getFontSmall(), MARGIN, EDIT_ROW3 - 25, "Direction:");
     }
     drawToggleButton(renderer, invertedOn, "Inverted", cfg.inverted);
     drawToggleButton(renderer, invertedOff, "Normal", !cfg.inverted);
     
     // Points down section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), MARGIN, ROW4_Y - 25, "Zero angle:");
+        drawText(renderer, getFontSmall(), MARGIN, EDIT_ROW4 - 25, "Zero angle:");
     }
     drawToggleButton(renderer, pointsDownOn, "Points Down", cfg.points_down);
     drawToggleButton(renderer, pointsDownOff, "Points Up", !cfg.points_down);
     
     // Offset section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), MARGIN, ROW5_Y - 25, "Offset:");
+        drawText(renderer, getFontSmall(), MARGIN, EDIT_ROW5 - 25, "Offset:");
     }
     offsetMinus.draw(renderer);
     offsetMinusFine.draw(renderer);
     char offsetBuf[16];
     snprintf(offsetBuf, sizeof(offsetBuf), "%.1f", cfg.offset);
-    drawValueBox(renderer, ROW5_Y, offsetBuf);
+    drawValueBox(renderer, EDIT_ROW5, offsetBuf);
     offsetPlusFine.draw(renderer);
     offsetPlus.draw(renderer);
     
     // Length section
     if (getFontSmall()) {
-        drawText(renderer, getFontSmall(), MARGIN, ROW6_Y - 25, "Length (mm):");
+        drawText(renderer, getFontSmall(), MARGIN, EDIT_ROW6 - 25, "Length (mm):");
     }
     lengthMinus.draw(renderer);
     lengthMinus10.draw(renderer);
     char lengthBuf[16];
     snprintf(lengthBuf, sizeof(lengthBuf), "%d", cfg.length_mm);
-    drawValueBox(renderer, ROW6_Y, lengthBuf);
+    drawValueBox(renderer, EDIT_ROW6, lengthBuf);
     lengthPlus10.draw(renderer);
     lengthPlus.draw(renderer);
     
