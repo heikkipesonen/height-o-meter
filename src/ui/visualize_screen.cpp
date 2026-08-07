@@ -33,7 +33,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     int pivotY = groundY;
     
     // Draw ground line
-    SDL_SetRenderDrawColor(renderer, 100, 80, 60, 255);
+    SDL_SetRenderDrawColor(renderer, GROUND_COLOR.r, GROUND_COLOR.g, GROUND_COLOR.b, 255);
     SDL_RenderDrawLine(renderer, 0, groundY, SCREEN_WIDTH, groundY);
     
     // Get superstructure tilt (machine lean)
@@ -46,7 +46,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     double superRad = toRadians(superTilt);
     
     // Draw superstructure box (rotated by tilt) - from pivot to boom pin
-    SDL_SetRenderDrawColor(renderer, 0, 180, 80, 255);
+    SDL_SetRenderDrawColor(renderer, MACHINE_COLOR.r, MACHINE_COLOR.g, MACHINE_COLOR.b, 255);
     
     // Box size based on boom pin offset
     float boxW = config->pivot_offset_x_mm * 2;
@@ -85,7 +85,7 @@ void renderVisualizeScreen(SDL_Renderer *renderer, ExcavatorState *state, const 
     int prevScreenY = pivotY - (int)(y * scale);
     
     // Draw pivot to boom pin
-    SDL_SetRenderDrawColor(renderer, 100, 100, 100, 255);
+    SDL_SetRenderDrawColor(renderer, PIVOT_COLOR.r, PIVOT_COLOR.g, PIVOT_COLOR.b, 255);
     SDL_RenderDrawLine(renderer, pivotX, pivotY, prevScreenX, prevScreenY);
     
     // Colors for each segment

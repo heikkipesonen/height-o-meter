@@ -91,9 +91,9 @@ ScreenResult handleSensorSetupInput(int tx, int ty, ExcavatorState *state) {
 
 static void drawValueBox(SDL_Renderer *renderer, int y, const char *value) {
     SDL_Rect box = {VALUE_BOX_X, y, VALUE_BOX_WIDTH, BUTTON_HEIGHT};
-    SDL_SetRenderDrawColor(renderer, 50, 50, 60, 255);
+    SDL_SetRenderDrawColor(renderer, INPUT_BG_COLOR.r, INPUT_BG_COLOR.g, INPUT_BG_COLOR.b, 255);
     SDL_RenderFillRect(renderer, &box);
-    SDL_SetRenderDrawColor(renderer, 80, 80, 100, 255);
+    SDL_SetRenderDrawColor(renderer, BORDER_COLOR.r, BORDER_COLOR.g, BORDER_COLOR.b, 255);
     SDL_RenderDrawRect(renderer, &box);
     if (getFontLarge()) {
         drawTextCentered(renderer, getFontLarge(), VALUE_BOX_X, y, VALUE_BOX_WIDTH, BUTTON_HEIGHT, value);

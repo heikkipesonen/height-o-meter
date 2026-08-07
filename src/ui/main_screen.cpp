@@ -127,14 +127,14 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
             SDL_RenderFillRect(renderer, &rect);
         } else {
             // Empty slot - dimmed
-            SDL_SetRenderDrawColor(renderer, 30, 30, 40, 255);
+            SDL_SetRenderDrawColor(renderer, INACTIVE_COLOR.r, INACTIVE_COLOR.g, INACTIVE_COLOR.b, 255);
             SDL_RenderFillRect(renderer, &rect);
         }
         
         // Label
         char label[2] = {(char)('A' + i), '\0'};
         if (getFontButton()) {
-            Color labelColor = storedPositions[i].occupied ? TEXT_COLOR : Color{60, 60, 70, 255};
+            Color labelColor = storedPositions[i].occupied ? TEXT_COLOR : DIMMED_TEXT_COLOR;
             if (selectedPosition == i) labelColor = {255, 255, 255, 255};
             drawTextCentered(renderer, getFontButton(), rect.x, rect.y, rect.w, rect.h, label, labelColor);
         }
@@ -179,7 +179,7 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
         for (int t = 0; t < thickness; t++) {
             int r = radius - t;
             // Gray background circle
-            SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255);
+            SDL_SetRenderDrawColor(renderer, CIRCLE_BG_COLOR.r, CIRCLE_BG_COLOR.g, CIRCLE_BG_COLOR.b, 255);
             for (int i = 0; i < 360; i++) {
                 double angle = i * M_PI / 180.0;
                 int x = centerX + (int)(cos(angle) * r);
@@ -232,79 +232,28 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_Rect marker = {centerX - 3, centerY - radius - 8, 6, 16};
         SDL_RenderFillRect(renderer, &marker);
-        
-        // Draw rotation degrees text
-        char rotStr[32];
-        snprintf(rotStr, sizeof(rotStr), "%.0f°", rotation);
-        if (getFontSmall()) {
-            drawTextCentered(renderer, getFontSmall(), 0, centerY + radius + 10, SCREEN_WIDTH, 30, rotStr, {150, 150, 255, 255});
-        }
     }
     
     int depthInt = (int)depth;
-    bool goingUp = depthInt >= 0;
-    
-    // Depth triangle (inside circle, left side)
-    int triX = centerX - 130;
-    int triY = centerY - 60;
-    int triSize = 30;
-    SDL_SetRenderDrawColor(renderer, goingUp ? 0 : 255, goingUp ? 200 : 60, 60, 255);
-    if (goingUp) {
-        for (int y = 0; y < triSize; y++) {
-            int halfWidth = y * triSize / triSize;
-            SDL_RenderDrawLine(renderer, triX - halfWidth, triY + y, triX + halfWidth, triY + y);
-        }
-    } else {
-        for (int y = 0; y < triSize; y++) {
-            int halfWidth = (triSize - y) * triSize / triSize;
-            SDL_RenderDrawLine(renderer, triX - halfWidth, triY + y, triX + halfWidth, triY + y);
-        }
-    }
     
     // Depth value (convert mm to cm)
     int depthCm = depthInt / 10;
     char depthStr[32];
-    snprintf(depthStr, sizeof(depthStr), "%d", depthCm < 0 ? -depthCm : depthCm);
+    snprintf(depthStr, sizeof(depthStr), "%+d", depthCm);
     if (getFontHuge()) {
-        Color depthColor = goingUp ? Color{0, 200, 60, 255} : Color{255, 60, 60, 255};
-        drawTextCentered(renderer, getFontHuge(), centerX - 140, centerY - 100, 280, 80, depthStr, depthColor);
+        drawTextCentered(renderer, getFontHuge(), centerX - 140, centerY - 100, 280, 80, depthStr, {255, 255, 255, 255});
     }
     
     // Divider line
     SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
     SDL_RenderDrawLine(renderer, centerX - 120, centerY, centerX + 120, centerY);
     
-    // Reach triangle (inside circle, left side)
-    bool reachPositive = reach >= 0;
-    int reachTriX = centerX - 130;
-    int reachTriY = centerY + 45;
-    SDL_SetRenderDrawColor(renderer, reachPositive ? 0 : 255, reachPositive ? 200 : 60, 60, 255);
-    if (reachPositive) {
-        for (int x = 0; x < triSize; x++) {
-            int halfHeight = (triSize - x) * triSize / triSize;
-            SDL_RenderDrawLine(renderer, reachTriX + x, reachTriY - halfHeight, reachTriX + x, reachTriY + halfHeight);
-        }
-    } else {
-        for (int x = 0; x < triSize; x++) {
-            int halfHeight = x * triSize / triSize;
-            SDL_RenderDrawLine(renderer, reachTriX + x, reachTriY - halfHeight, reachTriX + x, reachTriY + halfHeight);
-        }
-    }
-    
     // Reach value (convert mm to cm)
     int reachCm = (int)reach / 10;
     char reachStr[32];
-    snprintf(reachStr, sizeof(reachStr), "%d", reachCm < 0 ? -reachCm : reachCm);
+    snprintf(reachStr, sizeof(reachStr), "%+d", reachCm);
     if (getFontHuge()) {
-        Color reachColor = reachPositive ? Color{0, 200, 60, 255} : Color{255, 60, 60, 255};
-        drawTextCentered(renderer, getFontHuge(), centerX - 140, centerY + 20, 280, 80, reachStr, reachColor);
-    }
-    
-    // RELATIVE indicator below circle
-    if (zeroSet) {
-        if (getFontSmall()) {
-            drawTextCentered(renderer, getFontSmall(), 0, centerY + radius + 35, SCREEN_WIDTH, 30, "RELATIVE", {255, 200, 0, 255});
-        }
+        drawTextCentered(renderer, getFontHuge(), centerX - 140, centerY + 20, 280, 80, reachStr, {255, 255, 255, 255});
     }
     
     // Status dot
@@ -323,6 +272,6 @@ void renderMainScreen(SDL_Renderer *renderer, ExcavatorState *state) {
     sensorConfigBtn.draw(renderer);
     
     // Change button text based on state
-    zeroBtn.label = zeroSet ? "CLR" : "ZERO";
+    zeroBtn.label = "+";
     zeroBtn.draw(renderer);
 }

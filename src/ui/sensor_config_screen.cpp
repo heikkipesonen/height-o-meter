@@ -67,12 +67,12 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
         
         // Background color based on connection
         if (sensor.connected) {
-            SDL_SetRenderDrawColor(renderer, 40, 50, 40, 255);
+            SDL_SetRenderDrawColor(renderer, LIST_ITEM_OK_COLOR.r, LIST_ITEM_OK_COLOR.g, LIST_ITEM_OK_COLOR.b, 255);
         } else {
-            SDL_SetRenderDrawColor(renderer, 50, 40, 40, 255);
+            SDL_SetRenderDrawColor(renderer, LIST_ITEM_ERROR_COLOR.r, LIST_ITEM_ERROR_COLOR.g, LIST_ITEM_ERROR_COLOR.b, 255);
         }
         SDL_RenderFillRect(renderer, &rect);
-        SDL_SetRenderDrawColor(renderer, 60, 60, 70, 255);
+        SDL_SetRenderDrawColor(renderer, LIST_ITEM_BORDER_COLOR.r, LIST_ITEM_BORDER_COLOR.g, LIST_ITEM_BORDER_COLOR.b, 255);
         SDL_RenderDrawRect(renderer, &rect);
         
         if (getFontSmall()) {
@@ -87,7 +87,7 @@ void renderSensorConfigScreen(SDL_Renderer *renderer, ExcavatorState *state, Exc
             }
             
             const char *status = sensor.connected ? "OK" : "NC";
-            Color statusColor = sensor.connected ? Color{100, 200, 100, 255} : Color{200, 100, 100, 255};
+            Color statusColor = sensor.connected ? SUCCESS_COLOR : ERROR_COLOR;
             drawText(renderer, getFontSmall(), rect.x + rect.w - 35, rect.y + 20, status, statusColor);
         }
     }

@@ -30,11 +30,11 @@ rsync -av ~/Documents/height-o-meter/CMakeLists.txt rpi@192.168.4.200:~/height-o
 
 ### Sensors
 Witmotion industrial angle sensors on RS485 Modbus:
-- SENSOR_SUPERSTRUCTURE (id 1) - cab rotation
+- SENSOR_SUPERSTRUCTURE (id 1) - machine tilt (for rotation calc)
 - SENSOR_BOOM_A (id 2) - main boom section
 - SENSOR_BOOM_B (id 3) - secondary boom section
 - SENSOR_STICK (id 4) - stick/arm
-- SENSOR_TILT (id 5) - bucket tilt
+- SENSOR_CURL_TILT (id 5) - bucket curl and sideways tilt
 - SENSOR_TEST (id 80) - for setup/probing
 
 Sensor readings:
@@ -44,45 +44,7 @@ Sensor readings:
 
 ### Position Calculation
 
-Config per sensor (in config.cpp):
-- `axis` - which axis to use (X or Y)
-- `inverted` - flip sign of angle
-- `points_down` - segment points down at 0° (for Y calculation)
-- `length_mm` - segment length
-
-Current calculation (excavator.cpp):
-```cpp
-x += sin(angle) * length;
-y += cos(angle) * length;  // or -= if points_down
-```
-
-### Bucket Config
-```cpp
-struct BucketConfig {
-    const char* name;
-    int coupler_length_mm;  // stick end to tilt pin
-    int bucket_length_mm;   // tilt pin to bucket edge
-    int bucket_width_mm;    // for sideways tilt compensation
-};
-```
-
-Tilt sensor uses:
-- X axis (roll) for curl angle
-- Y axis (pitch) for sideways tilt compensation
-
-## Current Issue: Boom B Angle
-
-Problem: Height error grows when boom A and B pivot relative to each other.
-
-Boom B visualization flips direction when passing 90° horizontal:
-- Below 90°: cos() positive, Y goes up
-- Above 90°: cos() negative, Y goes down with `y +=`, but boom B continues downward physically
-
-The `points_down` flag doesn't fully solve this because boom B's world direction depends on boom A's angle.
-
-Known positions:
-- Both A and B at 90°: both horizontal, B continues forward from A (straight line)
-- A at 90°, B at 30°: B points upward/backward from A's end (folded in)
+See [docs/position-calculation.md](docs/position-calculation.md) for detailed calculation docs.
 
 ## Key Files
 
@@ -119,4 +81,4 @@ Add `using namespace Layout;` at top of screen files.
 
 - Helper functions like `drawValueBox` must be `static` if defined in multiple .cpp files (linker error otherwise)
 - Main screen shows depth/reach in **cm** (divided by 10 from internal mm values)
-- Sensor angles stored in `state->sensors[i].roll` (X) and `.pitch` (Y) - processed angle from `getSensorAngle()`
+- Sensor angles stored in `state->sensors[i].x` (roll) and `.y` (pitch) - processed angle from `getSensorAngle()`
